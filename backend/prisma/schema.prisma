@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  GUEST
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  CASH
+  BANK_TRANSFER
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  RESERVED
+  OUT_OF_SERVICE
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  firstName    String
+  lastName     String
+  phone        String?
+  role         UserRole @default(GUEST)
+  isActive     Boolean  @default(true)
+  isVerified   Boolean  @default(false)
+  avatar       String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookings     Booking[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model RoomType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  basePrice   Decimal  @db.Decimal(10, 2)
+  maxGuests   Int      @default(2)
+  amenities   String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms Room[]
+
+  @@map("room_types")
+}
+
+model Room {
+  id          String     @id @default(uuid())
+  roomNumber  String     @unique
+  floor       Int
+  status      RoomStatus @default(AVAILABLE)
+  description String?
+  images      String[]
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  roomTypeId  String
+  roomType    RoomType   @relation(fields: [roomTypeId], references: [id])
+  bookings    Booking[]
+
+  @@index([status])
+  @@index([roomTypeId])
+  @@map("rooms")
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  bookingNumber   String        @unique
+  checkInDate     DateTime
+  checkOutDate    DateTime
+  actualCheckIn   DateTime?
+  actualCheckOut  DateTime?
+  status          BookingStatus @default(PENDING)
+  adults          Int           @default(1)
+  children        Int           @default(0)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  specialRequests String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  roomId   String
+  room     Room   @relation(fields: [roomId], references: [id])
+  payment  Payment?
+
+  @@index([status])
+  @@index([userId])
+  @@index([roomId])
+  @@index([checkInDate, checkOutDate])
+  @@map("bookings")
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("usd")
+  status            PaymentStatus @default(PENDING)
+  method            PaymentMethod @default(STRIPE)
+  stripePaymentId   String?       @unique
+  stripeSessionId   String?
+  invoiceNumber     String        @unique
+  invoiceUrl        String?
+  refundAmount      Decimal?      @db.Decimal(10, 2)
+  refundReason      String?
+  metadata          Json?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  @@index([status])
+  @@index([stripePaymentId])
+  @@map("payments")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
