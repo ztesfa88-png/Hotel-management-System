@@ -1,6 +1,6 @@
 # Hotel Management System (HMS)
 
-A full-stack Hotel Management System built with NestJS, React, PostgreSQL, and real-time WebSockets. Designed for Ethiopian hospitality businesses with ETB (Ethiopian Birr) pricing.
+A full-stack Hotel Management System built with NestJS, React, PostgreSQL, and real-time WebSockets.
 
 ---
 
