@@ -2,12 +2,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install all dependencies (including devDependencies needed for build)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 COPY . .
 RUN npx prisma generate
 RUN npm run build
+
+# Prune to production-only deps
+RUN npm prune --production
 
 FROM node:20-alpine AS production
 
