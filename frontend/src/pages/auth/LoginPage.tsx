@@ -43,13 +43,6 @@ export default function LoginPage() {
             <p className="text-gray-500 mt-1">Sign in to your HMS account</p>
           </div>
 
-          {/* Demo credentials */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-xs text-blue-700">
-            <p className="font-semibold mb-1">Demo Credentials:</p>
-            <p>Admin: admin@hotel.com / Admin@123</p>
-            <p>Staff: staff@hotel.com / Staff@123</p>
-            <p>Guest: guest@hotel.com / Guest@123</p>
-          </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
