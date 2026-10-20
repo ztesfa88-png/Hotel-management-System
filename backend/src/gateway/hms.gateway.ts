@@ -41,7 +41,7 @@ export class HmsGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
       }
 
       this.logger.log(`Client connected: ${client.id}`);
-      client.emit('connected', { message: 'Connected to HMS WebSocket' });
+      client.emit('connected', { message: 'Connected to Woliso Hotel' });
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);
       client.disconnect();

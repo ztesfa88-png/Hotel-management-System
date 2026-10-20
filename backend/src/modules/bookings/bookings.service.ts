@@ -30,6 +30,7 @@ export class BookingsService {
     userId?: string,
     userRole?: UserRole,
     status?: BookingStatus,
+    branchId?: string,
   ) {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const { skip, take } = paginate(page, limit);
@@ -41,6 +42,7 @@ export class BookingsService {
       where.userId = userId;
     }
 
+    if (branchId) where.room = { branchId };
     if (status) where.status = status;
 
     if (search) {
@@ -70,7 +72,7 @@ export class BookingsService {
           user: {
             select: { id: true, firstName: true, lastName: true, email: true, phone: true },
           },
-          room: { include: { roomType: true } },
+          room: { include: { roomType: true, branch: true } },
           payment: true,
         },
       }),
@@ -87,7 +89,7 @@ export class BookingsService {
         user: {
           select: { id: true, firstName: true, lastName: true, email: true, phone: true },
         },
-        room: { include: { roomType: true } },
+        room: { include: { roomType: true, branch: true } },
         payment: true,
       },
     });
@@ -114,16 +116,19 @@ export class BookingsService {
       throw new BadRequestException('Check-out date must be after check-in date');
     }
 
-    if (checkIn < new Date()) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (checkIn < today) {
       throw new BadRequestException('Check-in date cannot be in the past');
     }
 
     // Use a transaction to prevent double booking
     return this.prisma.$transaction(async (tx) => {
       // Lock the room row for update
+      await tx.$queryRaw`SELECT "id" FROM "rooms" WHERE "id" = ${roomId} FOR UPDATE`;
       const room = await tx.room.findUnique({
         where: { id: roomId },
-        include: { roomType: true },
+        include: { roomType: true, branch: true },
       });
 
       if (!room || !room.isActive) {
@@ -132,6 +137,13 @@ export class BookingsService {
 
       if (room.status === RoomStatus.OUT_OF_SERVICE || room.status === RoomStatus.MAINTENANCE) {
         throw new BadRequestException(`Room ${room.roomNumber} is not available for booking`);
+      }
+
+      const guestCount = (adults ?? 1) + (children ?? 0);
+      if (guestCount > room.roomType.maxGuests) {
+        throw new BadRequestException(
+          `This room allows a maximum of ${room.roomType.maxGuests} guests`,
+        );
       }
 
       // Check for conflicting bookings
@@ -161,15 +173,15 @@ export class BookingsService {
       const totalAmount = Number(room.roomType.basePrice) * nights;
 
       // Generate booking number
-      const bookingNumber = `HMS-${Date.now()}-${uuidv4().substring(0, 6).toUpperCase()}`;
+      const bookingNumber = `WH-${Date.now()}-${uuidv4().substring(0, 6).toUpperCase()}`;
 
       const booking = await tx.booking.create({
         data: {
           bookingNumber,
           checkInDate: checkIn,
           checkOutDate: checkOut,
-          adults: adults || 1,
-          children: children || 0,
+          adults: adults ?? 1,
+          children: children ?? 0,
           totalAmount,
           specialRequests,
           status: BookingStatus.PENDING,
@@ -190,7 +202,7 @@ export class BookingsService {
       // Create notification for the user
       await this.notificationsService.create({
         userId,
-        title: 'Booking Confirmed',
+        title: 'Booking Received',
         message: `Your booking ${bookingNumber} for room ${room.roomNumber} has been created successfully.`,
         type: 'BOOKING_CREATED',
         data: { bookingId: booking.id, bookingNumber },

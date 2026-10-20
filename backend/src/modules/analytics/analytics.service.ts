@@ -215,32 +215,43 @@ export class AnalyticsService {
   async getOccupancyByMonth() {
     const months = [];
     const now = new Date();
+    const totalRooms = await this.prisma.room.count({ where: { isActive: true } });
 
     for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-
-      const [totalRooms, occupiedBookings] = await Promise.all([
-        this.prisma.room.count({ where: { isActive: true } }),
-        this.prisma.booking.count({
-          where: {
-            status: { in: [BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT, BookingStatus.CONFIRMED] },
-            checkInDate: { lte: endDate },
-            checkOutDate: { gte: date },
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 1));
+      const bookings = await this.prisma.booking.findMany({
+        where: {
+          status: {
+            in: [BookingStatus.CHECKED_IN, BookingStatus.CHECKED_OUT, BookingStatus.CONFIRMED],
           },
-        }),
-      ]);
+          checkInDate: { lt: nextMonth },
+          checkOutDate: { gt: date },
+        },
+        select: { checkInDate: true, checkOutDate: true },
+      });
 
-      const daysInMonth = endDate.getDate();
+      const daysInMonth = new Date(
+        Date.UTC(nextMonth.getUTCFullYear(), nextMonth.getUTCMonth(), 0),
+      ).getUTCDate();
+      const occupiedRoomNights = bookings.reduce((total, booking) => {
+        const stayStart = Math.max(booking.checkInDate.getTime(), date.getTime());
+        const stayEnd = Math.min(booking.checkOutDate.getTime(), nextMonth.getTime());
+        return total + Math.max(0, (stayEnd - stayStart) / (1000 * 60 * 60 * 24));
+      }, 0);
       const totalRoomNights = totalRooms * daysInMonth;
       const occupancyRate = totalRoomNights > 0
-        ? Math.min(Math.round((occupiedBookings / totalRooms) * 100), 100)
+        ? Math.min(Math.round((occupiedRoomNights / totalRoomNights) * 100), 100)
         : 0;
 
       months.push({
-        month: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
+        month: date.toLocaleString('default', {
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'UTC',
+        }),
         occupancyRate,
-        bookings: occupiedBookings,
+        bookings: bookings.length,
       });
     }
 

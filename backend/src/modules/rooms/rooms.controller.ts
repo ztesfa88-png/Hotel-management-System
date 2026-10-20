@@ -38,12 +38,14 @@ export class RoomsController {
   @ApiOperation({ summary: 'Get all rooms' })
   @ApiQuery({ name: 'status', enum: RoomStatus, required: false })
   @ApiQuery({ name: 'roomTypeId', required: false })
+  @ApiQuery({ name: 'branchId', required: false })
   findAll(
     @Query() paginationDto: PaginationDto,
     @Query('status') status?: RoomStatus,
     @Query('roomTypeId') roomTypeId?: string,
+      @Query('branchId', new ParseUUIDPipe({ optional: true })) branchId?: string,
   ) {
-    return this.roomsService.findAll(paginationDto, status, roomTypeId);
+    return this.roomsService.findAll(paginationDto, status, roomTypeId, branchId);
   }
 
   @Public()

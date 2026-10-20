@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsArray, Min, Max, MinLength } from 'class-validator';
+import { IsString, IsNumber, IsInt, IsOptional, IsArray, Min, Max, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -22,7 +22,7 @@ export class CreateRoomTypeDto {
 
   @ApiProperty({ example: 2 })
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   maxGuests: number;
 

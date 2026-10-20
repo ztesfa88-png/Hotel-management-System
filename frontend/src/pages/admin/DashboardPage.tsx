@@ -72,7 +72,7 @@ export default function DashboardPage() {
       value: stats?.rooms.total || 0,
       sub: `${stats?.rooms.available || 0} available`,
       icon: BedDouble,
-      color: 'bg-blue-50 text-blue-600',
+      color: 'bg-[#eff4ef] text-[#3c624b]',
       trend: null,
     },
     {
@@ -88,7 +88,7 @@ export default function DashboardPage() {
       value: formatCurrency(stats?.revenue.thisMonth || 0),
       sub: `${stats?.revenue.growth >= 0 ? '+' : ''}${stats?.revenue.growth || 0}% vs last month`,
       icon: DollarSign,
-      color: 'bg-purple-50 text-purple-600',
+      color: 'bg-[#f0eadb] text-[#a45132]',
       trend: stats?.revenue.growth,
     },
     {
@@ -117,13 +117,13 @@ export default function DashboardPage() {
 
       {/* Today's activity */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-blue-600" />
+        <div className="flex items-center gap-3 rounded-xl border border-[#dce8dc] bg-[#eff4ef] p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#dce8dc]">
+            <CheckCircle className="h-5 w-5 text-[#3c624b]" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-blue-700">{stats?.bookings.todayCheckIns || 0}</p>
-            <p className="text-sm text-blue-600">Check-ins Today</p>
+            <p className="text-2xl font-bold text-[#18392e]">{stats?.bookings.todayCheckIns || 0}</p>
+            <p className="text-sm text-[#3c624b]">Check-ins Today</p>
           </div>
         </div>
         <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center gap-3">
@@ -210,18 +210,18 @@ export default function DashboardPage() {
             <AreaChart data={revenueData || []}>
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#547b61" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#547b61" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: any) => [`$${v}`, 'Revenue']} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `ETB ${v}`} />
+              <Tooltip formatter={(v: any) => [formatCurrency(Number(v)), 'Revenue']} />
               <Area
                 type="monotone"
                 dataKey="revenue"
-                stroke="#3b82f6"
+                stroke="#3c624b"
                 fill="url(#revenueGradient)"
                 strokeWidth={2}
               />
@@ -238,7 +238,7 @@ export default function DashboardPage() {
               <XAxis dataKey="month" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
               <Tooltip formatter={(v: any) => [`${v}%`, 'Occupancy']} />
-              <Bar dataKey="occupancyRate" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="occupancyRate" fill="#3c624b" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {recentBookings?.data?.data?.map((booking: any) => (
+              {recentBookings?.data?.map((booking: any) => (
                 <tr key={booking.id}>
                   <td className="font-mono text-xs">{booking.bookingNumber}</td>
                   <td>{booking.user.firstName} {booking.user.lastName}</td>
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ))}
-              {(!recentBookings?.data?.data || recentBookings.data.data.length === 0) && (
+              {(!recentBookings?.data || recentBookings.data.length === 0) && (
                 <tr>
                   <td colSpan={6} className="text-center text-gray-400 py-8">
                     No bookings yet

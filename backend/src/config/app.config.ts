@@ -8,6 +8,6 @@ export default registerAs('app', () => ({
   uploadDir: process.env.UPLOAD_DIR || './uploads',
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 5242880,
   sendgridApiKey: process.env.SENDGRID_API_KEY,
-  sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@hotel.com',
-  sendgridFromName: process.env.SENDGRID_FROM_NAME || 'Hotel Management System',
+  sendgridFromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@wolisohotel.com',
+  sendgridFromName: process.env.SENDGRID_FROM_NAME || 'Woliso Hotel',
 }));

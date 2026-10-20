@@ -114,7 +114,7 @@ export class NotificationsService {
             <p>${dto.message}</p>
             <hr />
             <p style="color: #6b7280; font-size: 12px;">
-              This is an automated message from Hotel Management System.
+              This is an automated message from Woliso Hotel.
             </p>
           </div>
         `,

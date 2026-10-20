@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Tag } from 'lucide-react';
 import { useRoomTypes, useCreateRoomType, useUpdateRoomType, useDeleteRoomType } from '../../hooks/useRooms';
 import { formatCurrency } from '../../lib/utils';
@@ -106,12 +106,19 @@ export default function RoomTypesPage() {
 }
 
 function RoomTypeModal({ isOpen, onClose, roomType, onSubmit, isLoading }: any) {
-  const { register, handleSubmit, formState: { errors } } = useForm<Record<string, unknown>>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<Record<string, unknown>>({
     defaultValues: roomType ? {
       ...roomType,
       amenities: roomType.amenities?.join(', '),
     } : {},
   });
+
+  useEffect(() => {
+    reset(roomType ? {
+      ...roomType,
+      amenities: roomType.amenities?.join(', '),
+    } : {});
+  }, [roomType, reset]);
 
   const handleFormSubmit = (data: Record<string, unknown>) => {
     const amenities = (data.amenities as string)

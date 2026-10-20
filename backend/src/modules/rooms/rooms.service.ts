@@ -19,7 +19,12 @@ export class RoomsService {
     private readonly gateway: HmsGateway,
   ) {}
 
-  async findAll(paginationDto: PaginationDto, status?: RoomStatus, roomTypeId?: string) {
+  async findAll(
+    paginationDto: PaginationDto,
+    status?: RoomStatus,
+    roomTypeId?: string,
+    branchId?: string,
+  ) {
     const { page, limit, search, sortBy, sortOrder } = paginationDto;
     const { skip, take } = paginate(page, limit);
 
@@ -34,6 +39,7 @@ export class RoomsService {
 
     if (status) where.status = status;
     if (roomTypeId) where.roomTypeId = roomTypeId;
+    if (branchId) where.branchId = branchId;
 
     const orderBy: any = {};
     if (sortBy) {
@@ -48,7 +54,7 @@ export class RoomsService {
         skip,
         take,
         orderBy,
-        include: { roomType: true },
+        include: { roomType: true, branch: true },
       }),
       this.prisma.room.count({ where }),
     ]);
@@ -61,6 +67,7 @@ export class RoomsService {
       where: { id },
       include: {
         roomType: true,
+        branch: true,
         bookings: {
           where: {
             status: { in: ['CONFIRMED', 'CHECKED_IN', 'PENDING'] },
@@ -86,7 +93,7 @@ export class RoomsService {
   }
 
   async searchAvailable(searchDto: SearchRoomsDto) {
-    const { checkIn, checkOut, roomTypeId, minPrice, maxPrice, guests } = searchDto;
+    const { checkIn, checkOut, roomTypeId, branchId, minPrice, maxPrice, guests } = searchDto;
 
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
@@ -95,7 +102,9 @@ export class RoomsService {
       throw new BadRequestException('Check-out date must be after check-in date');
     }
 
-    if (checkInDate < new Date()) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (checkInDate < today) {
       throw new BadRequestException('Check-in date cannot be in the past');
     }
 
@@ -122,6 +131,7 @@ export class RoomsService {
     };
 
     if (roomTypeId) where.roomTypeId = roomTypeId;
+    if (branchId) where.branchId = branchId;
     if (guests) where.roomType = { maxGuests: { gte: guests } };
 
     if (minPrice || maxPrice) {
@@ -135,7 +145,7 @@ export class RoomsService {
 
     const rooms = await this.prisma.room.findMany({
       where,
-      include: { roomType: true },
+      include: { roomType: true, branch: true },
       orderBy: { roomType: { basePrice: 'asc' } },
     });
 
@@ -153,7 +163,12 @@ export class RoomsService {
 
   async create(createRoomDto: CreateRoomDto) {
     const existing = await this.prisma.room.findUnique({
-      where: { roomNumber: createRoomDto.roomNumber },
+      where: {
+        branchId_roomNumber: {
+          branchId: createRoomDto.branchId,
+          roomNumber: createRoomDto.roomNumber,
+        },
+      },
     });
 
     if (existing) {
@@ -168,9 +183,17 @@ export class RoomsService {
       throw new NotFoundException(`Room type with ID ${createRoomDto.roomTypeId} not found`);
     }
 
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: createRoomDto.branchId },
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`Branch with ID ${createRoomDto.branchId} not found`);
+    }
+
     const room = await this.prisma.room.create({
       data: createRoomDto,
-      include: { roomType: true },
+      include: { roomType: true, branch: true },
     });
 
     this.gateway.emitRoomStatusUpdate(room.id, room.status);
@@ -184,7 +207,7 @@ export class RoomsService {
     const room = await this.prisma.room.update({
       where: { id },
       data: updateRoomDto,
-      include: { roomType: true },
+      include: { roomType: true, branch: true },
     });
 
     if (updateRoomDto.status) {
@@ -200,7 +223,7 @@ export class RoomsService {
     const room = await this.prisma.room.update({
       where: { id },
       data: { status },
-      include: { roomType: true },
+      include: { roomType: true, branch: true },
     });
 
     this.gateway.emitRoomStatusUpdate(room.id, room.status);
@@ -223,7 +246,7 @@ export class RoomsService {
     return this.prisma.room.update({
       where: { id },
       data: { images: [...room.images, ...imageUrls] },
-      include: { roomType: true },
+      include: { roomType: true, branch: true },
     });
   }
 }

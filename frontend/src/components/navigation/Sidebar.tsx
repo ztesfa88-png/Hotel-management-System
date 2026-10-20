@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   Hotel,
+  Building2,
   LayoutDashboard,
   BedDouble,
   CalendarCheck,
@@ -25,6 +26,7 @@ interface SidebarProps {
 const adminNavItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { label: 'Rooms', icon: BedDouble, href: '/admin/rooms' },
+  { label: 'Branches', icon: Building2, href: '/admin/branches' },
   { label: 'Room Types', icon: Tag, href: '/admin/room-types' },
   { label: 'Bookings', icon: CalendarCheck, href: '/admin/bookings' },
   { label: 'Guests', icon: Users, href: '/admin/guests' },
@@ -42,18 +44,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
   const { user } = useAuthStore();
 
-  const navItems = user?.role === 'GUEST' ? guestNavItems : adminNavItems;
+  const navItems = user?.role === 'GUEST'
+    ? guestNavItems
+    : adminNavItems.filter(
+        (item) =>
+          !['/admin/branches', '/admin/room-types'].includes(item.href) ||
+          user?.role === 'ADMIN',
+      );
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-        <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-          <Hotel className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-3 border-b border-white/10 bg-[#18392e] px-6 py-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e9bd68]">
+          <Hotel className="h-5 w-5 text-[#18392e]" />
         </div>
         <div>
-          <p className="font-bold text-gray-900">HMS</p>
-          <p className="text-xs text-gray-500">Hotel Management</p>
+          <p className="font-bold text-white">Woliso Hotel</p>
+          <p className="text-xs text-white/60">Hospitality · Woliso</p>
         </div>
       </div>
 
@@ -82,10 +90,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* User info */}
       {user && (
-        <div className="px-4 py-4 border-t border-gray-200">
+        <div className="border-t border-gray-200 px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-primary-700 font-semibold text-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e9bd68]">
+              <span className="text-sm font-semibold text-[#18392e]">
                 {user.firstName.charAt(0)}{user.lastName.charAt(0)}
               </span>
             </div>
@@ -104,7 +112,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0">
+      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-[#e8e4d9] bg-white lg:flex">
         <SidebarContent />
       </aside>
 
@@ -115,7 +123,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             className="fixed inset-0 bg-black/50"
             onClick={onClose}
           />
-          <aside className="relative w-64 bg-white flex flex-col shadow-xl">
+          <aside className="relative flex w-64 flex-col bg-white shadow-xl">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100"

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Hotel, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
@@ -8,18 +8,17 @@ export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuthStore();
   const logout = useLogout();
-  const navigate = useNavigate();
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 border-b border-[#e8e4d9] bg-white/95 backdrop-blur">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <Hotel className="w-5 h-5 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#18392e]">
+              <Hotel className="h-5 w-5 text-[#e9bd68]" />
             </div>
-            <span className="font-bold text-xl text-gray-900">HMS</span>
+            <span className="text-xl font-bold tracking-tight text-[#18392e]">Woliso Hotel</span>
           </Link>
 
           {/* Desktop nav */}
@@ -89,9 +88,15 @@ export default function PublicNavbar() {
           </Link>
           {user ? (
             <>
-              <Link to="/bookings" className="block text-gray-600 font-medium py-2">
-                My Bookings
-              </Link>
+              {user.role === 'GUEST' ? (
+                <Link to="/bookings" className="block text-gray-600 font-medium py-2">
+                  My Bookings
+                </Link>
+              ) : (
+                <Link to="/dashboard" className="block text-gray-600 font-medium py-2">
+                  Dashboard
+                </Link>
+              )}
               <button
                 onClick={() => logout.mutate()}
                 className="block w-full text-left text-red-600 font-medium py-2"

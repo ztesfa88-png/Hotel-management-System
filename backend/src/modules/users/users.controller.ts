@@ -1,5 +1,6 @@
 import {
   Controller,
+  BadRequestException,
   Get,
   Post,
   Body,
@@ -9,8 +10,14 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ParseFilePipe,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -40,6 +47,45 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user booking history' })
   getMyBookings(@CurrentUser('id') userId: string) {
     return this.usersService.getGuestBookingHistory(userId);
+  }
+
+  @Post('me/avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { avatar: { type: 'string', format: 'binary' } },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb) => {
+          const extensions: Record<string, string> = {
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp',
+          };
+          cb(null, `${uuidv4()}${extensions[file.mimetype]}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/^image\/(jpeg|png|gif|webp)$/)) {
+          return cb(new BadRequestException('Only JPEG, PNG, GIF, and WebP images are allowed'), false);
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  @ApiOperation({ summary: 'Upload your profile avatar' })
+  uploadAvatar(
+    @UploadedFile(new ParseFilePipe()) file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.updateAvatar(userId, `/uploads/avatars/${file.filename}`);
   }
 
   @Get(':id')

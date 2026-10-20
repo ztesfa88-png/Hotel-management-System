@@ -5,15 +5,20 @@ import api from '../../lib/api';
 import { formatCurrency, formatDateTime, getPaymentStatusColor } from '../../lib/utils';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../../store/authStore';
 
 export default function PaymentsPage() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN';
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['payments', page],
-    queryFn: () =>
-      api.get('/payments', { params: { page, limit: 10 } }).then((r) => r.data.data),
+    queryFn: async () => {
+      const response = await api.get('/payments', { params: { page, limit: 10 } });
+      return { data: response.data.data, meta: response.data.meta };
+    },
   });
 
   const refundMutation = useMutation({
@@ -89,7 +94,7 @@ export default function PaymentsPage() {
                         {payment.paidAt ? formatDateTime(payment.paidAt) : '—'}
                       </td>
                       <td>
-                        {payment.status === 'COMPLETED' && (
+                        {isAdmin && payment.status === 'COMPLETED' && (
                           <button
                             onClick={() => handleRefund(payment.bookingId)}
                             className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"

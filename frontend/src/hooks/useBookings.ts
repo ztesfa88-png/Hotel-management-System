@@ -46,19 +46,26 @@ export function useBookings(params?: {
   limit?: number;
   search?: string;
   status?: string;
+  branchId?: string;
 }) {
   return useQuery({
     queryKey: ['bookings', params],
-    queryFn: () =>
-      api.get('/bookings', { params }).then((r) => r.data),
+    queryFn: async () => {
+      const response = await api.get('/bookings', { params });
+      return { data: response.data.data, meta: response.data.meta };
+    },
   });
 }
 
-export function useBooking(id: string) {
+export function useBooking(id: string, confirmPaymentReturn = false) {
   return useQuery({
     queryKey: ['bookings', id],
     queryFn: () => api.get(`/bookings/${id}`).then((r) => r.data.data),
     enabled: !!id,
+    refetchInterval: (query) =>
+      confirmPaymentReturn && query.state.data?.payment?.status !== 'COMPLETED'
+        ? 3000
+        : false,
   });
 }
 

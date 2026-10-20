@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, BedDouble, Calendar, Users, CreditCard, FileText } from 'lucide-react';
 import { useBooking } from '../../hooks/useBookings';
 import { useMutation } from '@tanstack/react-query';
@@ -9,7 +9,9 @@ import toast from 'react-hot-toast';
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: booking, isLoading } = useBooking(id!);
+  const [searchParams] = useSearchParams();
+  const paymentReturned = searchParams.get('payment') === 'success';
+  const { data: booking, isLoading, isError } = useBooking(id!, paymentReturned);
 
   const createCheckout = useMutation({
     mutationFn: () => api.post(`/payments/checkout/${id}`).then((r) => r.data.data),
@@ -34,7 +36,9 @@ export default function BookingDetailPage() {
   if (!booking) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Booking not found</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          {isError ? 'Unable to load this booking' : 'Booking not found'}
+        </h2>
         <Link to="/bookings" className="btn-primary">My Bookings</Link>
       </div>
     );
@@ -52,6 +56,21 @@ export default function BookingDetailPage() {
         </Link>
       </div>
 
+      {paymentReturned && (
+        <div
+          role="status"
+          className={`rounded-xl border p-4 text-sm ${
+            booking.payment?.status === 'COMPLETED'
+              ? 'border-green-200 bg-green-50 text-green-800'
+              : 'border-amber-200 bg-amber-50 text-amber-900'
+          }`}
+        >
+          {booking.payment?.status === 'COMPLETED'
+            ? 'Payment received. Your booking is confirmed.'
+            : 'Payment submitted. We are waiting for Stripe to confirm it; this page will update automatically.'}
+        </div>
+      )}
+
       {/* Header */}
       <div className="card">
         <div className="flex items-start justify-between mb-4">
@@ -66,8 +85,8 @@ export default function BookingDetailPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-              <BedDouble className="w-5 h-5 text-blue-600" />
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#eff4ef]">
+              <BedDouble className="h-5 w-5 text-[#3c624b]" />
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Room</p>
@@ -90,8 +109,8 @@ export default function BookingDetailPage() {
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 text-purple-600" />
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#f0eadb]">
+              <Users className="h-5 w-5 text-[#a45132]" />
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-0.5">Guests</p>

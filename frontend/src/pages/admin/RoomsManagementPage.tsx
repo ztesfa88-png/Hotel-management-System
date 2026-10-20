@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Search, Edit, Trash2, BedDouble, Filter } from 'lucide-react';
-import { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom, useRoomTypes } from '../../hooks/useRooms';
+import { useBranches, useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom, useRoomTypes } from '../../hooks/useRooms';
 import { formatCurrency, getRoomStatusColor } from '../../lib/utils';
 import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../../store/authStore';
 
 export default function RoomsManagementPage() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState<any>(null);
@@ -19,12 +23,14 @@ export default function RoomsManagementPage() {
     limit: 10,
     search: search || undefined,
     status: statusFilter || undefined,
+    branchId: branchFilter || undefined,
   });
 
   const createRoom = useCreateRoom();
   const updateRoom = useUpdateRoom();
   const deleteRoom = useDeleteRoom();
   const { data: roomTypes } = useRoomTypes();
+  const { data: branches = [] } = useBranches();
 
   const rooms = data?.data || [];
   const meta = data?.meta;
@@ -42,13 +48,15 @@ export default function RoomsManagementPage() {
           <h1 className="page-title">Rooms Management</h1>
           <p className="text-gray-500 text-sm mt-1">Manage hotel rooms and their availability</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Room
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Room
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -64,6 +72,16 @@ export default function RoomsManagementPage() {
               className="input-field pl-9"
             />
           </div>
+          <select
+            value={branchFilter}
+            onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
+            className="input-field sm:w-64"
+          >
+            <option value="">All Branches</option>
+            {branches.map((branch: { id: string; name: string }) => (
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
+            ))}
+          </select>
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
@@ -92,6 +110,7 @@ export default function RoomsManagementPage() {
                 <thead>
                   <tr>
                     <th>Room #</th>
+                    <th>Branch</th>
                     <th>Type</th>
                     <th>Floor</th>
                     <th>Price/Night</th>
@@ -104,6 +123,7 @@ export default function RoomsManagementPage() {
                   {rooms.map((room: any) => (
                     <tr key={room.id}>
                       <td className="font-semibold">{room.roomNumber}</td>
+                      <td>{room.branch?.name}</td>
                       <td>{room.roomType?.name}</td>
                       <td>Floor {room.floor}</td>
                       <td>{formatCurrency(Number(room.roomType?.basePrice))}</td>
@@ -121,19 +141,21 @@ export default function RoomsManagementPage() {
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(room.id, room.roomNumber)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDelete(room.id, room.roomNumber)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
                   ))}
                   {rooms.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="text-center py-12">
+                      <td colSpan={8} className="text-center py-12">
                         <BedDouble className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500">No rooms found</p>
                       </td>
@@ -177,6 +199,7 @@ export default function RoomsManagementPage() {
         onClose={() => { setShowCreateModal(false); setEditingRoom(null); }}
         room={editingRoom}
         roomTypes={roomTypes || []}
+        branches={branches}
         onSubmit={(data: Record<string, unknown>) => {
           if (editingRoom) {
             updateRoom.mutate({ id: editingRoom.id, data }, {
@@ -194,10 +217,14 @@ export default function RoomsManagementPage() {
   );
 }
 
-function RoomModal({ isOpen, onClose, room, roomTypes, onSubmit, isLoading }: any) {
+function RoomModal({ isOpen, onClose, room, roomTypes, branches, onSubmit, isLoading }: any) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<Record<string, unknown>>({
     defaultValues: room || {},
   });
+
+  useEffect(() => {
+    reset(room || {});
+  }, [room, reset]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={room ? 'Edit Room' : 'Add New Room'}>
@@ -223,6 +250,17 @@ function RoomModal({ isOpen, onClose, room, roomTypes, onSubmit, isLoading }: an
               placeholder="1"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Branch</label>
+          <select {...register('branchId', { required: 'Select a branch' })} className="input-field">
+            <option value="">Select branch</option>
+            {branches.map((branch: { id: string; name: string }) => (
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
+            ))}
+          </select>
+          {errors.branchId && <p className="text-xs text-red-600 mt-1">{errors.branchId.message as string}</p>}
         </div>
 
         <div>

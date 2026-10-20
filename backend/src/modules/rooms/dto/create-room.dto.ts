@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsUUID, IsEnum, IsArray, Min } from 'class-validator';
+import { IsString, IsInt, IsOptional, IsUUID, IsEnum, IsArray, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { RoomStatus } from '@prisma/client';
@@ -10,7 +10,7 @@ export class CreateRoomDto {
 
   @ApiProperty({ example: 1 })
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   floor: number;
 
@@ -33,4 +33,8 @@ export class CreateRoomDto {
   @ApiProperty()
   @IsUUID()
   roomTypeId: string;
+
+  @ApiProperty()
+  @IsUUID()
+  branchId: string;
 }

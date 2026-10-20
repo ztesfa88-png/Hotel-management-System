@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link } from 'react-router-dom';
-import { Hotel, Eye, EyeOff } from 'lucide-react';
+import { Hotel, Eye, EyeOff, Coffee, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useRegister } from '../../hooks/useAuth';
 
@@ -43,15 +43,32 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Hotel className="w-8 h-8 text-white" />
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f0eadb] px-4 py-10 sm:px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-[#e1dac8] bg-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative hidden overflow-hidden bg-[#18392e] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div aria-hidden="true" className="absolute -right-32 -top-24 h-96 w-96 rounded-full border border-[#e9bd68]/30" />
+          <div aria-hidden="true" className="absolute -right-16 top-0 h-64 w-64 rounded-full border border-[#e9bd68]/20" />
+          <div className="relative">
+            <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9bd68] text-[#18392e]">
+              <Hotel className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-            <p className="text-gray-500 mt-1">Join HMS to book your stay</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#e9bd68]">Your next Woliso stay</p>
+            <h2 className="font-serif text-4xl leading-tight">Make room<br /><span className="italic text-[#f2dca7]">for a new journey.</span></h2>
+          </div>
+          <div className="relative">
+            <Coffee className="mb-3 h-6 w-6 text-[#e9bd68]" />
+            <p className="max-w-xs font-serif text-xl italic text-white/90">A place to rest. A place to connect.</p>
+            <p className="mt-6 inline-flex items-center gap-2 text-xs text-white/55"><MapPin className="h-3.5 w-3.5" /> Woliso, Oromia · Ethiopia</p>
+          </div>
+        </div>
+        <div className="p-7 sm:p-10 lg:p-12">
+          <div className="mb-7 text-center lg:text-left">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#18392e] text-[#e9bd68] lg:hidden">
+              <Hotel className="h-6 w-6" />
+            </div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a45132]">Join us</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-[#18392e]">Create your account</h1>
+            <p className="mt-2 text-sm text-gray-500">Book your stay and keep your reservations together.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -108,7 +125,7 @@ export default function RegisterPage() {
               <input
                 {...formRegister('phone')}
                 type="tel"
-                placeholder="+1 234 567 8900"
+                placeholder="+251 9XX XXX XXX"
                 className="input-field"
               />
             </div>
@@ -161,9 +178,9 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/login" className="font-semibold text-[#a45132] hover:underline">
               Sign in
             </Link>
           </p>

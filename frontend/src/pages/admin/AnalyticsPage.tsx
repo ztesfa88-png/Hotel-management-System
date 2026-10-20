@@ -13,7 +13,7 @@ import {
 import { formatCurrency } from '../../lib/utils';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#3c624b', '#a45132', '#e9bd68', '#547b61', '#233f31'];
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month');
@@ -53,9 +53,9 @@ export default function AnalyticsPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Occupancy Rate', value: `${stats?.rooms.occupancyRate || 0}%`, color: 'text-blue-600' },
+          { label: 'Occupancy Rate', value: `${stats?.rooms.occupancyRate || 0}%`, color: 'text-[#3c624b]' },
           { label: 'Monthly Revenue', value: formatCurrency(stats?.revenue.thisMonth || 0), color: 'text-green-600' },
-          { label: 'Active Bookings', value: stats?.bookings.active || 0, color: 'text-purple-600' },
+          { label: 'Active Bookings', value: stats?.bookings.active || 0, color: 'text-[#a45132]' },
           { label: 'Revenue Growth', value: `${stats?.revenue.growth >= 0 ? '+' : ''}${stats?.revenue.growth || 0}%`, color: stats?.revenue.growth >= 0 ? 'text-green-600' : 'text-red-600' },
         ].map((item) => (
           <div key={item.label} className="card text-center">
@@ -77,15 +77,15 @@ export default function AnalyticsPage() {
             <AreaChart data={revenueData || []}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#547b61" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#547b61" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `ETB ${v}`} />
               <Tooltip formatter={(v: any) => [formatCurrency(Number(v)), 'Revenue']} />
-              <Area type="monotone" dataKey="revenue" stroke="#3b82f6" fill="url(#colorRevenue)" strokeWidth={2} />
+              <Area type="monotone" dataKey="revenue" stroke="#3c624b" fill="url(#colorRevenue)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Bookings" />
+              <Bar dataKey="count" fill="#3c624b" radius={[4, 4, 0, 0]} name="Bookings" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
             <Tooltip formatter={(v: any) => [`${v}%`, 'Occupancy Rate']} />
-            <Bar dataKey="occupancyRate" fill="#10b981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="occupancyRate" fill="#547b61" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

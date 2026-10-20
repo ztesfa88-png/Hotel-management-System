@@ -18,7 +18,7 @@ interface RegisterData {
   phone?: string;
 }
 
-export function useLogin() {
+export function useLogin(redirectTo?: string) {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
 
@@ -29,11 +29,11 @@ export function useLogin() {
       setAuth(user, accessToken, refreshToken);
       toast.success(`Welcome back, ${user.firstName}!`);
 
-      if (user.role === 'GUEST') {
-        navigate('/bookings');
-      } else {
-        navigate('/dashboard');
-      }
+      const fallback = user.role === 'GUEST' ? '/bookings' : '/dashboard';
+      const destination = redirectTo?.startsWith('/') && !redirectTo.startsWith('//')
+        ? redirectTo
+        : fallback;
+      navigate(destination);
     },
   });
 }

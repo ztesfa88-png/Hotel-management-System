@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
-import { Hotel, Eye, EyeOff } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Hotel, Eye, EyeOff, Coffee, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useLogin } from '../../hooks/useAuth';
 
@@ -15,7 +15,14 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const login = useLogin();
+  const location = useLocation();
+  const requestedPath = (location.state as {
+    from?: { pathname?: string; search?: string; hash?: string };
+  } | null)?.from;
+  const redirectTo = requestedPath?.pathname
+    ? `${requestedPath.pathname}${requestedPath.search ?? ''}${requestedPath.hash ?? ''}`
+    : undefined;
+  const login = useLogin(redirectTo);
 
   const {
     register,
@@ -30,17 +37,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Hotel className="w-8 h-8 text-white" />
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f0eadb] px-4 py-10 sm:px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-[#e1dac8] bg-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative hidden overflow-hidden bg-[#18392e] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div aria-hidden="true" className="absolute -right-32 -top-24 h-96 w-96 rounded-full border border-[#e9bd68]/30" />
+          <div aria-hidden="true" className="absolute -right-16 top-0 h-64 w-64 rounded-full border border-[#e9bd68]/20" />
+          <div className="relative">
+            <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9bd68] text-[#18392e]">
+              <Hotel className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-500 mt-1">Sign in to your HMS account</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#e9bd68]">Woliso Hotel · Ethiopia</p>
+            <h2 className="font-serif text-4xl leading-tight">Come in.<br /><span className="italic text-[#f2dca7]">Feel at home.</span></h2>
+          </div>
+          <div className="relative">
+            <Coffee className="mb-3 h-6 w-6 text-[#e9bd68]" />
+            <p className="max-w-xs font-serif text-xl italic text-white/90">“Baga nagaan dhuftan”</p>
+            <p className="mt-2 text-sm text-white/60">A warm welcome, wherever you are from.</p>
+            <p className="mt-6 inline-flex items-center gap-2 text-xs text-white/55"><MapPin className="h-3.5 w-3.5" /> Woliso, Oromia · Ethiopia</p>
+          </div>
+        </div>
+        <div className="p-7 sm:p-10 lg:p-12">
+          <div className="mb-8 text-center lg:text-left">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#18392e] text-[#e9bd68] lg:hidden">
+              <Hotel className="h-6 w-6" />
+            </div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a45132]">Welcome back</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-[#18392e]">Sign in to continue</h1>
+            <p className="mt-2 text-sm text-gray-500">Access your Woliso Hotel account and reservations.</p>
           </div>
 
 
@@ -95,9 +118,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="mt-6 text-center text-sm text-gray-500">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/register" className="font-semibold text-[#a45132] hover:underline">
               Create one
             </Link>
           </p>

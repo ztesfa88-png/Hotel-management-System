@@ -170,6 +170,22 @@ export class UsersService {
     return updated;
   }
 
+  async updateAvatar(userId: string, avatar: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { avatar },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        avatar: true,
+      },
+    });
+  }
+
   async remove(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {

@@ -7,8 +7,10 @@ import { useAuthStore } from '../store/authStore';
 export function useNotifications(page = 1, limit = 20) {
   return useQuery({
     queryKey: ['notifications', page],
-    queryFn: () =>
-      api.get('/notifications', { params: { page, limit } }).then((r) => r.data),
+    queryFn: async () => {
+      const response = await api.get('/notifications', { params: { page, limit } });
+      return { data: response.data.data, meta: response.data.meta };
+    },
   });
 }
 

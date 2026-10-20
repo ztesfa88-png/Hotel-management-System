@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -9,7 +10,7 @@ import Stripe from 'stripe';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { HmsGateway } from '../../gateway/hms.gateway';
-import { BookingStatus, PaymentStatus } from '@prisma/client';
+import { BookingStatus, PaymentStatus, UserRole } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -47,6 +48,13 @@ export class PaymentsService {
       throw new BadRequestException('Access denied');
     }
 
+    if (
+      booking.status === BookingStatus.CANCELLED ||
+      booking.status === BookingStatus.CHECKED_OUT
+    ) {
+      throw new BadRequestException('This booking can no longer be paid');
+    }
+
     if (booking.payment?.status === PaymentStatus.COMPLETED) {
       throw new BadRequestException('Booking is already paid');
     }
@@ -64,7 +72,7 @@ export class PaymentsService {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'etb',
             product_data: {
               name: `${booking.room.roomType.name} - Room ${booking.room.roomNumber}`,
               description: `${nights} night(s) stay from ${booking.checkInDate.toDateString()} to ${booking.checkOutDate.toDateString()}`,
@@ -75,7 +83,7 @@ export class PaymentsService {
         },
       ],
       mode: 'payment',
-      success_url: `${this.configService.get('app.frontendUrl')}/bookings/${bookingId}/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${this.configService.get('app.frontendUrl')}/bookings/${bookingId}?payment=success`,
       cancel_url: `${this.configService.get('app.frontendUrl')}/bookings/${bookingId}`,
       customer_email: booking.user.email,
       metadata: {
@@ -93,7 +101,7 @@ export class PaymentsService {
       create: {
         bookingId,
         amount: booking.totalAmount,
-        currency: 'usd',
+        currency: 'ETB',
         status: PaymentStatus.PENDING,
         method: 'STRIPE',
         stripeSessionId: session.id,
@@ -111,12 +119,17 @@ export class PaymentsService {
   async handleWebhook(payload: Buffer, signature: string) {
     const webhookSecret = this.configService.get('stripe.webhookSecret');
 
+    if (!this.stripe || !webhookSecret || !payload || !signature) {
+      throw new BadRequestException('Stripe webhook is not configured correctly');
+    }
+
     let event: Stripe.Event;
 
     try {
       event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-    } catch (err) {
-      throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid signature';
+      throw new BadRequestException(`Webhook signature verification failed: ${message}`);
     }
 
     switch (event.type) {
@@ -134,23 +147,72 @@ export class PaymentsService {
   }
 
   private async handlePaymentSuccess(session: Stripe.Checkout.Session) {
-    const { bookingId, userId } = session.metadata;
+    const { bookingId, userId } = session.metadata ?? {};
+    if (!bookingId || !userId || session.payment_status !== 'paid') {
+      throw new BadRequestException('Stripe checkout session is incomplete');
+    }
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.payment.update({
+    const paymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id;
+    if (!paymentIntentId) {
+      throw new BadRequestException('Stripe payment intent is missing');
+    }
+
+    const completed = await this.prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.findUnique({
         where: { bookingId },
+        include: { booking: { select: { userId: true, status: true } } },
+      });
+
+      if (
+        !payment ||
+        payment.stripeSessionId !== session.id ||
+        payment.booking.userId !== userId
+      ) {
+        throw new BadRequestException('Stripe checkout session does not match a pending payment');
+      }
+      if (payment.status === PaymentStatus.COMPLETED) {
+        return false;
+      }
+      if (
+        payment.booking.status === BookingStatus.CANCELLED ||
+        payment.booking.status === BookingStatus.CHECKED_OUT
+      ) {
+        throw new BadRequestException('The booking can no longer be confirmed by payment');
+      }
+      if (
+        session.amount_total !== Math.round(Number(payment.amount) * 100) ||
+        session.currency?.toUpperCase() !== payment.currency
+      ) {
+        throw new BadRequestException('Stripe payment amount or currency does not match the booking');
+      }
+
+      const updated = await tx.payment.updateMany({
+        where: {
+          bookingId,
+          stripeSessionId: session.id,
+          status: { not: PaymentStatus.COMPLETED },
+        },
         data: {
           status: PaymentStatus.COMPLETED,
-          stripePaymentId: session.payment_intent as string,
+          stripePaymentId: paymentIntentId,
           paidAt: new Date(),
         },
       });
+
+      if (updated.count === 0) {
+        return false;
+      }
 
       await tx.booking.update({
         where: { id: bookingId },
         data: { status: BookingStatus.CONFIRMED },
       });
+      return true;
     });
+
+    if (!completed) return;
 
     await this.notificationsService.create({
       userId,
@@ -188,7 +250,7 @@ export class PaymentsService {
     }
   }
 
-  async getPaymentByBooking(bookingId: string) {
+  async getPaymentByBooking(bookingId: string, userId: string, userRole: UserRole) {
     const payment = await this.prisma.payment.findUnique({
       where: { bookingId },
       include: {
@@ -203,6 +265,10 @@ export class PaymentsService {
 
     if (!payment) {
       throw new NotFoundException(`Payment for booking ${bookingId} not found`);
+    }
+
+    if (userRole === UserRole.GUEST && payment.booking.userId !== userId) {
+      throw new ForbiddenException('Access denied');
     }
 
     return payment;

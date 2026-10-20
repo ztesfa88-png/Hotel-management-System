@@ -11,9 +11,12 @@ export default function GuestsManagementPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['users', 'guests', page, search],
-    queryFn: () =>
-      api.get('/users', { params: { page, limit: 10, search: search || undefined, role: 'GUEST' } })
-        .then((r) => r.data.data),
+    queryFn: async () => {
+      const response = await api.get('/users', {
+        params: { page, limit: 10, search: search || undefined, role: 'GUEST' },
+      });
+      return { data: response.data.data, meta: response.data.meta };
+    },
   });
 
   const guests = data?.data || [];

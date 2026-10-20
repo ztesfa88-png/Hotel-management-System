@@ -8,8 +8,8 @@ export default function NotificationsPage() {
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
 
-  const notifications = data?.data?.data || [];
-  const unreadCount = data?.data?.meta?.unreadCount || 0;
+  const notifications = data?.data || [];
+  const unreadCount = data?.meta?.unreadCount || 0;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">

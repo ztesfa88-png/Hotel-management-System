@@ -83,9 +83,23 @@ model RoomType {
   @@map("room_types")
 }
 
+model Branch {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  city      String
+  region    String
+  country   String   @default("Ethiopia")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms Room[]
+
+  @@map("branches")
+}
+
 model Room {
   id          String     @id @default(uuid())
-  roomNumber  String     @unique
+  roomNumber  String
   floor       Int
   status      RoomStatus @default(AVAILABLE)
   description String?
@@ -96,10 +110,14 @@ model Room {
 
   roomTypeId  String
   roomType    RoomType   @relation(fields: [roomTypeId], references: [id])
+  branchId    String
+  branch      Branch     @relation(fields: [branchId], references: [id])
   bookings    Booking[]
 
+  @@unique([branchId, roomNumber])
   @@index([status])
   @@index([roomTypeId])
+  @@index([branchId])
   @@map("rooms")
 }
 
@@ -135,9 +153,9 @@ model Booking {
 model Payment {
   id                String        @id @default(uuid())
   amount            Decimal       @db.Decimal(10, 2)
-  currency          String        @default("usd")
+  currency          String        @default("ETB")
   status            PaymentStatus @default(PENDING)
-  method            PaymentMethod @default(STRIPE)
+  method            PaymentMethod @default(CASH)
   stripePaymentId   String?       @unique
   stripeSessionId   String?
   invoiceNumber     String        @unique

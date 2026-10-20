@@ -1,13 +1,15 @@
 import { useForm } from 'react-hook-form';
-import { User, Mail, Phone, Save } from 'lucide-react';
+import { User, Mail, Phone, Save, Camera } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../lib/api';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
+import { useRef } from 'react';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, formState: { errors, isDirty } } = useForm({
     defaultValues: {
@@ -26,6 +28,20 @@ export default function ProfilePage() {
     },
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      return api.post('/users/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    onSuccess: (response) => {
+      updateUser(response.data.data);
+      toast.success('Profile photo updated');
+    },
+  });
+
   const onSubmit = (data: any) => {
     updateProfile.mutate(data);
   };
@@ -38,19 +54,47 @@ export default function ProfilePage() {
       </div>
 
       {/* Avatar */}
-      <div className="card flex items-center gap-4">
-        <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-primary-700 font-bold text-xl">
-            {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-          </span>
+      <div className="card flex flex-wrap items-center gap-4">
+        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+          {user?.avatar ? (
+            <img src={user.avatar} alt={`${user.firstName} ${user.lastName}`} className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-xl font-bold text-primary-700">
+              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+            </span>
+          )}
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="font-semibold text-gray-900 text-lg">
             {user?.firstName} {user?.lastName}
           </h2>
           <p className="text-gray-500 text-sm">{user?.email}</p>
           <span className="badge-info mt-1">{user?.role}</span>
         </div>
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file && file.size > 5 * 1024 * 1024) {
+              toast.error('Profile photos must be 5 MB or smaller');
+            } else if (file) {
+              uploadAvatar.mutate(file);
+            }
+            event.target.value = '';
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={uploadAvatar.isPending}
+          className="btn-secondary flex items-center gap-2 text-sm disabled:opacity-50"
+        >
+          <Camera className="h-4 w-4" />
+          {uploadAvatar.isPending ? 'Uploading...' : 'Change photo'}
+        </button>
       </div>
 
       {/* Edit form */}

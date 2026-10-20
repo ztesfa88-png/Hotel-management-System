@@ -13,8 +13,8 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { UploadsModule } from './modules/uploads/uploads.module';
 import { GatewayModule } from './gateway/gateway.module';
+import { BranchesModule } from './modules/branches/branches.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -35,6 +35,7 @@ import stripeConfig from './config/stripe.config';
     ]),
     ScheduleModule.forRoot(),
     PrismaModule,
+    BranchesModule,
     AuthModule,
     UsersModule,
     RoomsModule,
@@ -43,7 +44,6 @@ import stripeConfig from './config/stripe.config';
     PaymentsModule,
     NotificationsModule,
     AnalyticsModule,
-    UploadsModule,
     GatewayModule,
   ],
   providers: [

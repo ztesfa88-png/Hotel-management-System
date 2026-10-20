@@ -20,6 +20,7 @@ import GuestsManagementPage from './pages/admin/GuestsManagementPage';
 import PaymentsPage from './pages/admin/PaymentsPage';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
 import RoomTypesPage from './pages/admin/RoomTypesPage';
+import BranchesManagementPage from './pages/admin/BranchesManagementPage';
 
 // Guest pages
 import MyBookingsPage from './pages/guest/MyBookingsPage';
@@ -40,8 +41,22 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/rooms" element={<SearchRoomsPage />} />
         <Route path="/rooms/:id" element={<RoomDetailPage />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+        <Route
+          path="/login"
+          element={
+            user
+              ? <Navigate to={user.role === 'GUEST' ? '/bookings' : '/dashboard'} replace />
+              : <LoginPage />
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            user
+              ? <Navigate to={user.role === 'GUEST' ? '/bookings' : '/dashboard'} replace />
+              : <RegisterPage />
+          }
+        />
       </Route>
 
       {/* Protected routes - Admin/Staff */}
@@ -54,7 +69,22 @@ function App() {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/admin/rooms" element={<RoomsManagementPage />} />
-        <Route path="/admin/room-types" element={<RoomTypesPage />} />
+        <Route
+          path="/admin/branches"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <BranchesManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/room-types"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <RoomTypesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/admin/bookings" element={<BookingsManagementPage />} />
         <Route path="/admin/guests" element={<GuestsManagementPage />} />
         <Route path="/admin/payments" element={<PaymentsPage />} />

@@ -11,6 +11,8 @@ export interface Room {
   images: string[];
   isActive: boolean;
   roomTypeId: string;
+  branchId: string;
+  branch: Branch;
   roomType: {
     id: string;
     name: string;
@@ -22,9 +24,18 @@ export interface Room {
   createdAt: string;
 }
 
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  region: string;
+  country: string;
+}
+
 export interface SearchParams {
   checkIn: string;
   checkOut: string;
+  branchId?: string;
   roomTypeId?: string;
   guests?: number;
   minPrice?: number;
@@ -37,11 +48,48 @@ export function useRooms(params?: {
   search?: string;
   status?: string;
   roomTypeId?: string;
+  branchId?: string;
 }) {
   return useQuery({
     queryKey: ['rooms', params],
-    queryFn: () =>
-      api.get('/rooms', { params }).then((r) => r.data.data),
+    queryFn: async () => {
+      const response = await api.get('/rooms', { params });
+      return { data: response.data.data, meta: response.data.meta };
+    },
+  });
+}
+
+export function useBranches() {
+  return useQuery({
+    queryKey: ['branches'],
+    queryFn: () => api.get('/branches').then((r) => r.data.data),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useCreateBranch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Omit<Branch, 'id'>) => api.post('/branches', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      toast.success('Branch created successfully');
+    },
+  });
+}
+
+export function useUpdateBranch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Omit<Branch, 'id'> }) =>
+      api.patch(`/branches/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success('Branch updated successfully');
+    },
   });
 }
 
@@ -53,11 +101,11 @@ export function useRoom(id: string) {
   });
 }
 
-export function useSearchRooms(params: SearchParams) {
+export function useSearchRooms(params: SearchParams, enabled = true) {
   return useQuery({
     queryKey: ['rooms', 'search', params],
     queryFn: () => api.get('/rooms/search', { params }).then((r) => r.data.data),
-    enabled: !!(params.checkIn && params.checkOut),
+    enabled: enabled && !!(params.checkIn && params.checkOut),
   });
 }
 
@@ -68,6 +116,7 @@ export function useCreateRoom() {
     mutationFn: (data: any) => api.post('/rooms', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
       toast.success('Room created successfully');
     },
   });
@@ -106,6 +155,7 @@ export function useDeleteRoom() {
     mutationFn: (id: string) => api.delete(`/rooms/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
       toast.success('Room deactivated');
     },
   });

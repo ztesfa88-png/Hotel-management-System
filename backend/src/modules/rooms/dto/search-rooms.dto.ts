@@ -16,6 +16,11 @@ export class SearchRoomsDto {
   @IsUUID()
   roomTypeId?: string;
 
+  @ApiPropertyOptional({ description: 'Limit room search to a hotel branch' })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)

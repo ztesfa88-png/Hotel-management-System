@@ -1,6 +1,6 @@
-# Hotel Management System (HMS)
+# Woliso Hotel Management System
 
-A full-stack Hotel Management System built with NestJS, React, PostgreSQL, and real-time WebSockets.
+A hotel booking and operations system for Woliso Hotel in Woliso, Oromia, Ethiopia. It is seeded with two branches, and administrators can add and update locations. Room rates and payment records are in Ethiopian Birr (ETB).
 
 ---
 
@@ -27,7 +27,7 @@ A full-stack Hotel Management System built with NestJS, React, PostgreSQL, and r
 
 ## Overview
 
-HMS is a production-ready hotel management platform that handles the full guest lifecycle — from room browsing and booking to check-in, payment, and check-out. It includes a real-time dashboard for admins, a guest-facing booking portal, Stripe payment integration, and live WebSocket notifications.
+The system handles the guest lifecycle — from room browsing and booking to check-in, payment, and check-out. Guests can browse rooms across all available branches or select a specific branch, and hotel staff can filter room and booking operations by branch.
 
 ---
 
@@ -52,16 +52,17 @@ HMS is a production-ready hotel management platform that handles the full guest 
 ## Features
 
 ### Guest Portal
-- Browse and search available rooms by date, guests, and room type
+- Browse and search available rooms by branch, date, guests, and room type
 - View room details, amenities, and photos
 - Create, view, and cancel bookings
-- Stripe-powered online payment with invoice generation
+- Payment tracking in ETB with invoice generation
 - Real-time booking status notifications
 - Profile management with avatar upload
 
 ### Admin / Staff Dashboard
 - Live dashboard with occupancy rate, revenue, and booking stats
-- Room management — create, edit, deactivate rooms and room types
+- Branch management — add and update hotel locations
+- Branch-aware room management — create, edit, deactivate, and filter rooms by branch
 - Booking management — confirm, check-in, check-out, cancel bookings
 - Guest management — view all registered guests and their history
 - Payment management — view transactions, process refunds
@@ -101,6 +102,7 @@ HotelManagementSystem/
 │   │   │   ├── auth/               # Login, register, refresh, strategies
 │   │   │   ├── users/              # User CRUD, avatar upload
 │   │   │   ├── rooms/              # Room CRUD, search, availability
+│   │   │   ├── branches/           # Branch directory and management
 │   │   │   ├── room-types/         # Room type CRUD, pricing
 │   │   │   ├── bookings/           # Booking lifecycle management
 │   │   │   ├── payments/           # Stripe checkout, webhooks, refunds
@@ -130,8 +132,8 @@ HotelManagementSystem/
 │   │   │   ├── socket.ts           # Socket.IO client
 │   │   │   └── utils.ts            # formatCurrency (ETB), formatDate, etc.
 │   │   ├── pages/
-│   │   │   ├── admin/              # Dashboard, Rooms, Bookings, Guests,
-│   │   │   │                       # Payments, Analytics, RoomTypes
+│   │   │   ├── admin/              # Dashboard, Branches, Rooms, Bookings,
+│   │   │   │                       # Guests, Payments, Analytics, RoomTypes
 │   │   │   ├── auth/               # Login, Register
 │   │   │   ├── guest/              # MyBookings, BookingDetail,
 │   │   │   │                       # Profile, Notifications
@@ -197,10 +199,10 @@ cp .env.example .env
 ```bash
 cd backend
 
-# Run migrations to create all tables
-npx prisma migrate dev --name init
+# Apply the schema and Woliso branch migrations
+npx prisma migrate dev
 
-# Seed with demo users, room types, and rooms
+# Seed the two branches, rooms, room types, and demo accounts
 npm run prisma:seed
 ```
 
@@ -282,7 +284,8 @@ Users
 |---|---|
 | `User` | Guests, staff, and admins with RBAC roles |
 | `RoomType` | Room categories with base price and amenities |
-| `Room` | Individual rooms linked to a room type |
+| `Branch` | Woliso Hotel branch location |
+| `Room` | Individual rooms linked to a room type and branch |
 | `Booking` | Reservation with check-in/out dates and status |
 | `Payment` | Stripe payment record linked to a booking |
 | `Notification` | In-app notifications per user |
@@ -316,9 +319,9 @@ npm run prisma:seed             # Run seed script
 
 | Role | Email | Password | Access |
 |---|---|---|---|
-| Admin | admin@hotel.com | Admin@123 | Full system access |
-| Staff | staff@hotel.com | Staff@123 | Bookings, rooms, guests |
-| Guest | guest@hotel.com | Guest@123 | Own bookings and profile |
+| Admin | admin@wolisohotel.com | Admin@123 | Full system access |
+| Staff | staff@wolisohotel.com | Staff@123 | Bookings, rooms, guests |
+| Guest | guest@wolisohotel.com | Guest@123 | Own bookings and profile |
 
 ---
 

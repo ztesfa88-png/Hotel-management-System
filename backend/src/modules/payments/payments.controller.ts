@@ -53,8 +53,12 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   @Get('booking/:bookingId')
   @ApiOperation({ summary: 'Get payment details for a booking' })
-  getPaymentByBooking(@Param('bookingId', ParseUUIDPipe) bookingId: string) {
-    return this.paymentsService.getPaymentByBooking(bookingId);
+  getPaymentByBooking(
+    @Param('bookingId', ParseUUIDPipe) bookingId: string,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: UserRole,
+  ) {
+    return this.paymentsService.getPaymentByBooking(bookingId, userId, userRole);
   }
 
   @ApiBearerAuth('JWT-auth')

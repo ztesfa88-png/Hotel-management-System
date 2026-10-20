@@ -30,7 +30,7 @@ export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   const unreadCount = unreadData?.count || 0;
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 h-16 flex items-center justify-between flex-shrink-0">
+    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-[#e8e4d9] bg-white/90 px-4 backdrop-blur sm:px-6">
       {/* Left side */}
       <div className="flex items-center gap-4">
         <button
@@ -62,10 +62,18 @@ export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-primary-700 font-semibold text-sm">
-                {user ? getInitials(user.firstName, user.lastName) : 'U'}
-              </span>
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary-100">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-semibold text-primary-800">
+                  {user ? getInitials(user.firstName, user.lastName) : 'U'}
+                </span>
+              )}
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-sm font-medium text-gray-900">

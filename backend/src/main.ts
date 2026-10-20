@@ -14,6 +14,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug'],
+    rawBody: true,
   });
 
   // Security
@@ -69,8 +70,8 @@ async function bootstrap() {
   // Swagger documentation
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Hotel Management System API')
-      .setDescription('Complete API documentation for the HMS platform')
+      .setTitle('Woliso Hotel API')
+      .setDescription('Hotel booking and branch management API for Woliso Hotel, Ethiopia')
       .setVersion('1.0')
       .addBearerAuth(
         { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
@@ -78,6 +79,7 @@ async function bootstrap() {
       )
       .addTag('auth', 'Authentication endpoints')
       .addTag('users', 'User management')
+      .addTag('branches', 'Hotel branch directory')
       .addTag('rooms', 'Room management')
       .addTag('room-types', 'Room type management')
       .addTag('bookings', 'Booking management')
@@ -97,7 +99,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`🚀 HMS Backend running on: http://localhost:${port}`);
+  console.log(`🚀 Woliso Hotel API running on: http://localhost:${port}`);
   console.log(`📚 API Docs available at: http://localhost:${port}/api/docs`);
 }
 

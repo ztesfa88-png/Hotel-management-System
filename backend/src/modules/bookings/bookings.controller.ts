@@ -33,13 +33,15 @@ export class BookingsController {
   @Get()
   @ApiOperation({ summary: 'Get all bookings' })
   @ApiQuery({ name: 'status', enum: BookingStatus, required: false })
+  @ApiQuery({ name: 'branchId', required: false })
   findAll(
     @Query() paginationDto: PaginationDto,
     @Query('status') status: BookingStatus,
+    @Query('branchId', new ParseUUIDPipe({ optional: true })) branchId: string,
     @CurrentUser('id') userId: string,
     @CurrentUser('role') userRole: UserRole,
   ) {
-    return this.bookingsService.findAll(paginationDto, userId, userRole, status);
+    return this.bookingsService.findAll(paginationDto, userId, userRole, status, branchId);
   }
 
   @Get(':id')

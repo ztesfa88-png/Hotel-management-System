@@ -17,8 +17,8 @@ export default function MyBookingsPage() {
 
   const cancelBooking = useCancelBooking();
 
-  const bookings = data?.data?.data || [];
-  const meta = data?.data?.meta;
+  const bookings = data?.data || [];
+  const meta = data?.meta;
 
   const handleCancel = (id: string, bookingNumber: string) => {
     if (confirm(`Cancel booking ${bookingNumber}?`)) {
@@ -41,7 +41,7 @@ export default function MyBookingsPage() {
 
       {/* Status filter */}
       <div className="flex gap-2 flex-wrap">
-        {['', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED'].map((s) => (
+        {['', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'NO_SHOW'].map((s) => (
           <button
             key={s}
             onClick={() => { setStatusFilter(s); setPage(1); }}
