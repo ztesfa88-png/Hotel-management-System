@@ -1,136 +1,127 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Hotel,
-  Building2,
-  LayoutDashboard,
-  BedDouble,
-  CalendarCheck,
-  Users,
-  CreditCard,
-  BarChart3,
-  Settings,
-  X,
-  Tag,
-  Bell,
-  BookOpen,
-  User,
+  Hotel, Building2, LayoutDashboard, BedDouble, CalendarCheck,
+  Users, CreditCard, BarChart3, X, Tag, Bell, BookOpen, User,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { cn } from '../../lib/utils';
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface SidebarProps { isOpen: boolean; onClose: () => void; }
 
-const adminNavItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { label: 'Rooms', icon: BedDouble, href: '/admin/rooms' },
-  { label: 'Branches', icon: Building2, href: '/admin/branches' },
-  { label: 'Room Types', icon: Tag, href: '/admin/room-types' },
-  { label: 'Bookings', icon: CalendarCheck, href: '/admin/bookings' },
-  { label: 'Guests', icon: Users, href: '/admin/guests' },
-  { label: 'Payments', icon: CreditCard, href: '/admin/payments' },
-  { label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
+const adminNav = [
+  { label: 'Dashboard',  icon: LayoutDashboard, href: '/dashboard',       section: 'Overview' },
+  { label: 'Rooms',      icon: BedDouble,        href: '/admin/rooms',     section: 'Manage' },
+  { label: 'Branches',   icon: Building2,        href: '/admin/branches',  section: 'Manage' },
+  { label: 'Room Types', icon: Tag,              href: '/admin/room-types',section: 'Manage' },
+  { label: 'Bookings',   icon: CalendarCheck,    href: '/admin/bookings',  section: 'Manage' },
+  { label: 'Guests',     icon: Users,            href: '/admin/guests',    section: 'Manage' },
+  { label: 'Payments',   icon: CreditCard,       href: '/admin/payments',  section: 'Reports' },
+  { label: 'Analytics',  icon: BarChart3,        href: '/admin/analytics', section: 'Reports' },
 ];
 
-const guestNavItems = [
-  { label: 'My Bookings', icon: BookOpen, href: '/bookings' },
-  { label: 'Notifications', icon: Bell, href: '/notifications' },
-  { label: 'Profile', icon: User, href: '/profile' },
+const guestNav = [
+  { label: 'My Bookings',   icon: BookOpen, href: '/bookings',      section: 'Account' },
+  { label: 'Notifications', icon: Bell,     href: '/notifications', section: 'Account' },
+  { label: 'Profile',       icon: User,     href: '/profile',       section: 'Account' },
 ];
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const location = useLocation();
-  const { user } = useAuthStore();
+function SidebarContent({ onClose }: { onClose: () => void }) {
+  const { pathname } = useLocation();
+  const { user }     = useAuthStore();
 
-  const navItems = user?.role === 'GUEST'
-    ? guestNavItems
-    : adminNavItems.filter(
-        (item) =>
-          !['/admin/branches', '/admin/room-types'].includes(item.href) ||
-          user?.role === 'ADMIN',
-      );
+  const items = user?.role === 'GUEST'
+    ? guestNav
+    : adminNav.filter((i) => !['/admin/branches', '/admin/room-types'].includes(i.href) || user?.role === 'ADMIN');
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+  const sections = [...new Set(items.map((i) => i.section))];
+
+  return (
+    <div className="flex h-full flex-col bg-white border-r border-stone-200">
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-white/10 bg-[#18392e] px-6 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e9bd68]">
-          <Hotel className="h-5 w-5 text-[#18392e]" />
+      <div className="flex h-[68px] items-center gap-2.5 border-b border-stone-100 px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#e8501e]">
+          <Hotel className="h-4 w-4 text-white" />
         </div>
         <div>
-          <p className="font-bold text-white">Woliso Hotel</p>
-          <p className="text-xs text-white/60">Hospitality · Woliso</p>
+          <p className="font-display text-[16px] font-semibold text-stone-900">Woliso</p>
+          <p className="font-ui text-[8px] font-medium uppercase tracking-[0.2em] text-stone-400">Workspace</p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href;
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        {sections.map((section) => {
+          const sectionItems = items.filter((i) => i.section === section);
           return (
-            <Link
-              key={item.href}
-              to={item.href}
-              onClick={onClose}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                isActive
-                  ? 'bg-primary-50 text-primary-700 border border-primary-100'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-              )}
-            >
-              <item.icon className={cn('w-5 h-5', isActive ? 'text-primary-600' : 'text-gray-400')} />
-              {item.label}
-            </Link>
+            <div key={section} className="mb-5">
+              <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8c2b8]">{section}</p>
+              <div className="space-y-0.5">
+                {sectionItems.map((item) => {
+                  const active = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      onClick={onClose}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150',
+                        active
+                          ? 'bg-[#fff3ee] text-[#e8501e]'
+                          : 'text-[#5a5650] hover:bg-[#f5f3f0] hover:text-[#1a1a1a]',
+                      )}
+                    >
+                      <item.icon className={cn('h-4 w-4 shrink-0', active ? 'text-[#e8501e]' : 'text-[#a09890]')} />
+                      {item.label}
+                      {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#e8501e]" />}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>
 
-      {/* User info */}
+      {/* User */}
       {user && (
-        <div className="border-t border-gray-200 px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e9bd68]">
-              <span className="text-sm font-semibold text-[#18392e]">
-                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-              </span>
+        <div className="border-t border-[#eceae5] p-4">
+          <div className="flex items-center gap-3 rounded-lg bg-[#faf9f7] px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8501e] text-xs font-bold text-white">
+              {user.firstName[0]}{user.lastName[0]}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user.role}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#1a1a1a]">{user.firstName} {user.lastName}</p>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#a09890]">{user.role}</p>
             </div>
           </div>
         </div>
       )}
     </div>
   );
+}
 
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 flex-col border-r border-[#e8e4d9] bg-white lg:flex">
-        <SidebarContent />
+      {/* Desktop */}
+      <aside className="hidden w-60 shrink-0 lg:block">
+        <SidebarContent onClose={onClose} />
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={onClose}
-          />
-          <aside className="relative flex w-64 flex-col bg-white shadow-xl">
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+          <aside className="relative w-60 shadow-xl">
             <button
+              type="button"
+              aria-label="Close"
               onClick={onClose}
-              className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100"
+              className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-[#787068] hover:bg-[#f5f3f0]"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="h-4 w-4" />
             </button>
-            <SidebarContent />
+            <SidebarContent onClose={onClose} />
           </aside>
         </div>
       )}

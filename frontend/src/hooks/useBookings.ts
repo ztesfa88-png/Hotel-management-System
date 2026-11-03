@@ -54,6 +54,7 @@ export function useBookings(params?: {
       const response = await api.get('/bookings', { params });
       return { data: response.data.data, meta: response.data.meta };
     },
+    refetchInterval: 30 * 1000,
   });
 }
 

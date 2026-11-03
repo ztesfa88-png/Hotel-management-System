@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
@@ -12,89 +12,20 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor - attach token
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const { accessToken } = useAuthStore.getState();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
-// Response interceptor - handle token refresh
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (value: any) => void; reject: (reason?: any) => void }> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  (error: AxiosError<{ message?: string; data?: { message?: string } }>) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const isAuthRequest = /\/auth\/(login|register|logout|refresh)$/.test(requestUrl);
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
+    if (status === 401 && !isAuthRequest) {
+      useAuthStore.getState().logout();
+      if (!['/login', '/register'].includes(window.location.pathname)) {
+        window.location.assign('/login');
       }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const { refreshToken, setAuth, logout, user } = useAuthStore.getState();
-
-      if (!refreshToken) {
-        logout();
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      try {
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
-          headers: { Authorization: `Bearer ${refreshToken}` },
-        });
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
-
-        if (user) {
-          setAuth(user, newAccessToken, newRefreshToken);
-        }
-
-        processQueue(null, newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        logout();
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    // Handle other errors
-    const message = (error.response?.data as any)?.message || 'An error occurred';
-    if (error.response?.status !== 401) {
-      toast.error(message);
+    } else if (status && status !== 401) {
+      toast.error(error.response?.data?.data?.message || error.response?.data?.message || 'An error occurred');
     }
 
     return Promise.reject(error);

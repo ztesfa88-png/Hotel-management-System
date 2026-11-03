@@ -1,7 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import api from '../lib/api';
-import { getSocket } from '../lib/socket';
 import { useAuthStore } from '../store/authStore';
 
 export function useNotifications(page = 1, limit = 20) {
@@ -16,22 +14,6 @@ export function useNotifications(page = 1, limit = 20) {
 
 export function useUnreadCount() {
   const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!user) return;
-
-    const socket = getSocket();
-
-    socket.on(`notification:${user.id}`, () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
-    });
-
-    return () => {
-      socket.off(`notification:${user.id}`);
-    };
-  }, [user, queryClient]);
 
   return useQuery({
     queryKey: ['notifications', 'unread'],

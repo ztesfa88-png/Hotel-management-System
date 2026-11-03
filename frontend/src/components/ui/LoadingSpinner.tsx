@@ -1,18 +1,14 @@
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
+interface Props { size?: 'sm' | 'md' | 'lg'; className?: string; }
 
-export default function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-8 h-8 border-2',
-    lg: 'w-12 h-12 border-3',
-  };
-
+export default function LoadingSpinner({ size = 'md', className = '' }: Props) {
+  const s = { sm: 'h-5 w-5', md: 'h-8 w-8', lg: 'h-12 w-12' }[size];
+  const t = { sm: 'border-[2px]', md: 'border-[2.5px]', lg: 'border-[3px]' }[size];
   return (
     <div
-      className={`${sizeClasses[size]} border-primary-200 border-t-primary-600 rounded-full animate-spin ${className}`}
+      role="status"
+      aria-label="Loading"
+      className={`rounded-full border-stone-200 border-t-[#e8501e] animate-spin ${s} ${t} ${className}`}
+      style={{ animationDuration: '0.75s' }}
     />
   );
 }

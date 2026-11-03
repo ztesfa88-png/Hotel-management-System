@@ -1,11 +1,8 @@
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, BedDouble, Calendar, Users, CreditCard, FileText } from 'lucide-react';
+import { ChevronLeft, BedDouble, Calendar, Users, FileText, CreditCard } from 'lucide-react';
 import { useBooking } from '../../hooks/useBookings';
-import { useMutation } from '@tanstack/react-query';
-import api from '../../lib/api';
 import { formatCurrency, formatDate, formatDateTime, getBookingStatusColor, getPaymentStatusColor, calculateNights } from '../../lib/utils';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
-import toast from 'react-hot-toast';
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,21 +10,9 @@ export default function BookingDetailPage() {
   const paymentReturned = searchParams.get('payment') === 'success';
   const { data: booking, isLoading, isError } = useBooking(id!, paymentReturned);
 
-  const createCheckout = useMutation({
-    mutationFn: () => api.post(`/payments/checkout/${id}`).then((r) => r.data.data),
-    onSuccess: (data) => {
-      if (data.sessionUrl) {
-        window.location.href = data.sessionUrl;
-      }
-    },
-    onError: () => {
-      toast.error('Failed to create payment session');
-    },
-  });
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -35,160 +20,157 @@ export default function BookingDetailPage() {
 
   if (!booking) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className="mx-auto max-w-xl border border-[#ded9ce] bg-[#f3f2ee] px-6 py-16 text-center">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.2em] text-[#e65332]">Reservation lookup</p>
+        <h2 className="mb-6 text-2xl font-bold tracking-tight text-[#1b1b1b]">
           {isError ? 'Unable to load this booking' : 'Booking not found'}
         </h2>
-        <Link to="/bookings" className="btn-primary">My Bookings</Link>
+        <Link to="/bookings" className="inline-flex bg-[#1b1b1b] px-5 py-3 text-sm font-semibold text-white transition hover:bg-black">My Bookings</Link>
       </div>
     );
   }
 
   const nights = calculateNights(booking.checkInDate, booking.checkOutDate);
-  const canPay = booking.status !== 'CANCELLED' && (!booking.payment || booking.payment.status === 'PENDING' || booking.payment.status === 'FAILED');
-
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center gap-4">
-        <Link to="/bookings" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-sm">
-          <ChevronLeft className="w-4 h-4" />
-          Back to bookings
-        </Link>
-      </div>
+    <div className="mx-auto max-w-5xl space-y-6 animate-fade-in">
+      <Link to="/bookings" className="inline-flex items-center gap-2 text-sm font-semibold text-[#68746a] transition hover:text-[#1b1b1b]">
+        <ChevronLeft className="h-4 w-4" />
+        All reservations
+      </Link>
 
       {paymentReturned && (
         <div
           role="status"
-          className={`rounded-xl border p-4 text-sm ${
+          className={`border-l-4 px-5 py-4 text-sm ${
             booking.payment?.status === 'COMPLETED'
-              ? 'border-green-200 bg-green-50 text-green-800'
-              : 'border-amber-200 bg-amber-50 text-amber-900'
+              ? 'border-[#ff5b35] bg-[#fff0eb] text-[#87341f]'
+              : 'border-[#ff5b35] bg-[#fff1ea] text-[#87341f]'
           }`}
         >
           {booking.payment?.status === 'COMPLETED'
             ? 'Payment received. Your booking is confirmed.'
-            : 'Payment submitted. We are waiting for Stripe to confirm it; this page will update automatically.'}
+            : 'Payment submitted. Please contact hotel staff if your payment status does not update.'}
         </div>
       )}
 
-      {/* Header */}
-      <div className="card">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">Booking Details</h1>
-            <p className="font-mono text-sm text-gray-500">{booking.bookingNumber}</p>
-          </div>
-          <span className={getBookingStatusColor(booking.status)}>
-            {booking.status}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#eff4ef]">
-              <BedDouble className="h-5 w-5 text-[#3c624b]" />
-            </div>
+      <section className="overflow-hidden border border-[#ded9ce] bg-[#fffdfa]">
+        <div className="relative overflow-hidden bg-[#1b1b1b] px-6 py-7 text-white sm:px-10 sm:py-9">
+          <div className="absolute -right-10 -top-20 h-60 w-60 rounded-full border border-white/10" />
+          <div className="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs text-gray-500 mb-0.5">Room</p>
-              <p className="font-semibold text-gray-900">{booking.room.roomType.name}</p>
-              <p className="text-sm text-gray-500">Room {booking.room.roomNumber}</p>
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#ff5b35]">Reservation detail</p>
+              <h1 className="text-4xl font-black tracking-[-0.04em] sm:text-6xl">{booking.room.roomType.name}</h1>
+              <p className="mt-2 text-sm text-white/65">Room {booking.room.roomNumber} <span className="px-2 text-white/30">/</span> Booking <span className="font-mono text-white/85">{booking.bookingNumber}</span></p>
             </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Stay Duration</p>
-              <p className="font-semibold text-gray-900">{nights} night{nights > 1 ? 's' : ''}</p>
-              <p className="text-sm text-gray-500">
-                {formatDate(booking.checkInDate)} → {formatDate(booking.checkOutDate)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#f0eadb]">
-              <Users className="h-5 w-5 text-[#a45132]" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Guests</p>
-              <p className="font-semibold text-gray-900">
-                {booking.adults} adult{booking.adults > 1 ? 's' : ''}
-                {booking.children > 0 && `, ${booking.children} child${booking.children > 1 ? 'ren' : ''}`}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
-              <CreditCard className="w-5 h-5 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Total Amount</p>
-              <p className="font-bold text-xl text-primary-600">{formatCurrency(Number(booking.totalAmount))}</p>
-            </div>
+            <span className={getBookingStatusColor(booking.status)}>{booking.status}</span>
           </div>
         </div>
 
-        {booking.specialRequests && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 mb-1">Special Requests</p>
-            <p className="text-sm text-gray-700">{booking.specialRequests}</p>
-          </div>
-        )}
-
-        <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
-          Booked on {formatDateTime(booking.createdAt)}
-        </div>
-      </div>
-
-      {/* Payment section */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-gray-400" />
-          <h2 className="font-semibold text-gray-900">Payment</h2>
-        </div>
-
-        {booking.payment ? (
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Invoice #</span>
-              <span className="font-mono font-medium">{booking.payment.invoiceNumber}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Amount</span>
-              <span className="font-semibold">{formatCurrency(Number(booking.payment.amount))}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Status</span>
-              <span className={getPaymentStatusColor(booking.payment.status)}>
-                {booking.payment.status}
-              </span>
-            </div>
-            {booking.payment.paidAt && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Paid on</span>
-                <span>{formatDateTime(booking.payment.paidAt)}</span>
+        <div className="grid border-b border-[#ded9ce] sm:grid-cols-[1.25fr_1fr_1fr]">
+          <div className="bg-[#f3f1e9] px-6 py-6 sm:px-8 sm:py-8">
+            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#e65332]">Your stay</p>
+            <div className="flex items-center gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e65332]">Check in</p>
+                <p className="mt-1 text-lg font-bold leading-tight text-[#1b1b1b]">{formatDate(booking.checkInDate)}</p>
               </div>
-            )}
+              <span className="mt-4 text-xl text-[#b3aa99]">→</span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#e65332]">Check out</p>
+                <p className="mt-1 text-lg font-bold leading-tight text-[#1b1b1b]">{formatDate(booking.checkOutDate)}</p>
+              </div>
+            </div>
+            <p className="mt-5 border-t border-[#ded9ce] pt-4 text-sm font-bold text-[#1b1b1b]">{nights} night{nights > 1 ? 's' : ''}</p>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500">No payment record yet.</p>
-        )}
+          <div className="border-t border-[#ded9ce] px-6 py-6 sm:border-l sm:border-t-0 sm:px-8 sm:py-8">
+            <div className="mb-5 flex items-center gap-2 text-[#e65332]">
+              <Users className="h-4 w-4" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Party</p>
+            </div>
+            <p className="text-lg font-bold text-[#1b1b1b]">
+              {booking.adults} adult{booking.adults > 1 ? 's' : ''}
+              {booking.children > 0 && `, ${booking.children} child${booking.children > 1 ? 'ren' : ''}`}
+            </p>
+            <p className="mt-1 text-sm text-[#77766e]">Guest count</p>
+          </div>
+          <div className="border-t border-[#ded9ce] px-6 py-6 sm:border-l sm:border-t-0 sm:px-8 sm:py-8">
+            <div className="mb-5 flex items-center gap-2 text-[#e65332]">
+              <CreditCard className="h-4 w-4" />
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Stay total</p>
+            </div>
+            <p className="text-3xl font-black tracking-tight text-[#1b1b1b]">{formatCurrency(Number(booking.totalAmount))}</p>
+            <p className="mt-1 text-sm text-[#77766e]">All nights included</p>
+          </div>
+        </div>
 
-        {canPay && booking.status !== 'CANCELLED' && (
-          <button
-            onClick={() => createCheckout.mutate()}
-            disabled={createCheckout.isPending}
-            className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
-          >
-            <CreditCard className="w-4 h-4" />
-            {createCheckout.isPending ? 'Redirecting...' : 'Pay Now with Stripe'}
-          </button>
-        )}
-      </div>
+        <div className="grid sm:grid-cols-[1fr_1fr]">
+          <div className="px-6 py-6 sm:px-8 sm:py-7">
+            <div className="mb-4 flex items-center gap-3">
+              <BedDouble className="h-4 w-4 text-[#e65332]" />
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.17em] text-[#1b1b1b]">Your room</h2>
+            </div>
+            <p className="text-lg font-bold text-[#1b1b1b]">{booking.room.roomType.name}</p>
+            <p className="mt-1 text-sm text-[#77766e]">Room {booking.room.roomNumber}</p>
+          </div>
+          {booking.specialRequests && (
+            <div className="border-t border-[#ded9ce] px-6 py-6 sm:border-l sm:border-t-0 sm:px-8 sm:py-7">
+              <div className="mb-4 flex items-center gap-3">
+                <FileText className="h-4 w-4 text-[#e65332]" />
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.17em] text-[#1b1b1b]">Special requests</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-[#454b43]">{booking.specialRequests}</p>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 border-t border-[#ded9ce] px-6 py-4 text-xs text-[#89877f] sm:px-8">
+          <Calendar className="h-3.5 w-3.5" />
+          Reserved on {formatDateTime(booking.createdAt)}
+        </div>
+      </section>
+
+      <section className="grid gap-0 border border-[#ded9ce] bg-[#fffdfa] sm:grid-cols-[260px_1fr]">
+        <div className="bg-[#f3f1e9] px-6 py-6 sm:px-7">
+          <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#e65332]">The account</p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center bg-[#ffebe5] text-[#e65332]">
+              <FileText className="h-4 w-4" />
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-[#1b1b1b]">Payment</h2>
+          </div>
+        </div>
+        <div className="px-6 py-5 sm:px-8">
+          {booking.payment ? (
+            <div className="divide-y divide-[#e3e1da]">
+              <div className="flex items-center justify-between gap-4 py-3 text-sm">
+                <span className="text-[#77766e]">Invoice #</span>
+                <span className="text-right font-mono font-medium text-[#454b43]">{booking.payment.invoiceNumber}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-3 text-sm">
+                <span className="text-[#77766e]">Amount</span>
+                <span className="font-bold text-[#1b1b1b]">{formatCurrency(Number(booking.payment.amount))}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-3 text-sm">
+                <span className="text-[#77766e]">Status</span>
+                <span className={getPaymentStatusColor(booking.payment.status)}>{booking.payment.status}</span>
+              </div>
+              {booking.payment.paidAt && (
+                <div className="flex items-center justify-between gap-4 py-3 text-sm">
+                  <span className="text-[#77766e]">Paid on</span>
+                  <span className="text-right text-[#454b43]">{formatDateTime(booking.payment.paidAt)}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="py-2 text-sm text-[#77766e]">No payment record yet.</p>
+          )}
+
+          {booking.payment?.status === 'PENDING' && booking.status !== 'CANCELLED' && (
+            <p className="mt-4 border-l-4 border-[#ff5b35] bg-[#fff1ea] p-4 text-sm leading-relaxed text-[#87341f]">
+              Please settle this balance with hotel staff. Online card payments are not configured.
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

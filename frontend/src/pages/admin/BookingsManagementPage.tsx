@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, CalendarCheck, CheckCircle, XCircle, LogIn, LogOut } from 'lucide-react';
+import { Search, CalendarCheck, CheckCircle, XCircle, LogIn, LogOut, Filter } from 'lucide-react';
 import {
   useBookings,
   useConfirmBooking,
@@ -35,17 +35,22 @@ export default function BookingsManagementPage() {
   const meta = data?.meta;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-7 animate-fade-in">
+      <div className="page-header gap-4 rounded-[1.75rem] bg-[#1d1b1a] px-5 py-6 text-white shadow-xl shadow-black/15 sm:px-8 sm:py-8">
         <div>
-          <h1 className="page-title">Bookings Management</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage all hotel bookings</p>
+          <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#ff795f]">Front desk · Reservations</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Bookings</h1>
+          <p className="mt-2 max-w-xl text-sm text-white/70 sm:text-base">Keep every arrival, stay and departure moving smoothly.</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="card rounded-2xl border border-[#e8ddd5] bg-[#fffaf6] shadow-sm sm:p-6">
+        <div className="mb-4 flex items-center gap-2 text-[#171a17]">
+          <Filter className="h-4 w-4 text-[#f05a3a]" />
+          <h2 className="text-xs font-black uppercase tracking-[0.16em]">Find a reservation</h2>
+        </div>
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -59,7 +64,7 @@ export default function BookingsManagementPage() {
           <select
             value={branchFilter}
             onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
-            className="input-field sm:w-64"
+            className="input-field w-full sm:w-56"
           >
             <option value="">All Branches</option>
             {branches.map((branch: { id: string; name: string }) => (
@@ -69,7 +74,7 @@ export default function BookingsManagementPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="input-field sm:w-48"
+            className="input-field w-full sm:w-48"
           >
             <option value="">All Statuses</option>
             <option value="PENDING">Pending</option>
@@ -82,15 +87,22 @@ export default function BookingsManagementPage() {
       </div>
 
       {/* Table */}
-      <div className="card p-0">
+      <div className="card overflow-hidden rounded-2xl border border-[#e8ddd5] bg-[#fffaf6] p-0 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[#eeeae0] px-5 py-4 sm:px-6">
+          <div>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#f05a3a]">Reservations ledger</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-[#1d1b1a]">Booking activity</h2>
+          </div>
+          <p className="text-xs font-semibold text-[#736a64]">{meta?.total ?? bookings.length} total</p>
+        </div>
         {isLoading ? (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>
         ) : (
           <>
-            <div className="table-container rounded-xl">
-              <table className="table">
+            <div className="table-container overflow-x-auto">
+              <table className="table min-w-[1050px]">
                 <thead>
                   <tr>
                     <th>Booking #</th>
@@ -107,7 +119,7 @@ export default function BookingsManagementPage() {
                 <tbody>
                   {bookings.map((booking: any) => (
                     <tr key={booking.id}>
-                      <td className="font-mono text-xs font-medium">{booking.bookingNumber}</td>
+                      <td className="font-mono text-xs font-bold tracking-wide text-[#f05a3a]">{booking.bookingNumber}</td>
                       <td>
                         <div>
                           <p className="font-medium">{booking.user.firstName} {booking.user.lastName}</p>
@@ -188,8 +200,8 @@ export default function BookingsManagementPage() {
             </div>
 
             {meta && meta.totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
+              <div className="flex flex-col gap-3 border-t border-[#eeeae0] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <p className="text-sm text-[#73766d]">
                   Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} of {meta.total}
                 </p>
                 <div className="flex gap-2">

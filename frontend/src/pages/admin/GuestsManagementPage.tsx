@@ -23,15 +23,23 @@ export default function GuestsManagementPage() {
   const meta = data?.meta;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-7 animate-fade-in">
+      <div className="page-header gap-4 rounded-[1.75rem] bg-[#173b32] px-5 py-6 text-white shadow-xl shadow-[#173b32]/10 sm:px-8 sm:py-8">
         <div>
-          <h1 className="page-title">Guests Management</h1>
-          <p className="text-gray-500 text-sm mt-1">View and manage hotel guests</p>
+          <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#c7d78d]">Guest relations · Directory</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Guests</h1>
+          <p className="mt-2 text-sm text-white/70 sm:text-base">Know your guests and keep every detail close at hand.</p>
         </div>
       </div>
 
-      <div className="card">
+      <div className="card rounded-2xl border border-[#e8e4d8] bg-[#fffdfa] shadow-sm sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#db4930]">Guest lookup</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-[#171a17]">Search your directory</h2>
+          </div>
+          <span className="shrink-0 rounded-full bg-[#f3efe9] px-3 py-1 text-xs font-bold text-[#315b43]">{meta?.total ?? guests.length} guests</span>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -44,13 +52,13 @@ export default function GuestsManagementPage() {
         </div>
       </div>
 
-      <div className="card p-0">
+      <div className="card overflow-hidden rounded-2xl border border-[#e8e4d8] bg-[#fffdfa] p-0 shadow-sm">
         {isLoading ? (
           <div className="flex justify-center py-16"><LoadingSpinner /></div>
         ) : (
           <>
-            <div className="table-container rounded-xl">
-              <table className="table">
+            <div className="table-container overflow-x-auto">
+              <table className="table min-w-[780px]">
                 <thead>
                   <tr>
                     <th>Guest</th>
@@ -66,13 +74,13 @@ export default function GuestsManagementPage() {
                     <tr key={guest.id}>
                       <td>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-primary-700 font-semibold text-xs">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#173b32]">
+                            <span className="text-xs font-bold text-[#e2e9bd]">
                               {getInitials(guest.firstName, guest.lastName)}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">{guest.firstName} {guest.lastName}</p>
+                            <p className="font-semibold text-[#171a17]">{guest.firstName} {guest.lastName}</p>
                           </div>
                         </div>
                       </td>
@@ -116,8 +124,8 @@ export default function GuestsManagementPage() {
             </div>
 
             {meta && meta.totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
+              <div className="flex flex-col gap-3 border-t border-[#eeeae0] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <p className="text-sm text-[#73766d]">
                   Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} of {meta.total}
                 </p>
                 <div className="flex gap-2">

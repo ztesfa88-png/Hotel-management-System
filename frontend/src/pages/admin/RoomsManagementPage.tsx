@@ -42,11 +42,12 @@ export default function RoomsManagementPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-7 animate-fade-in">
+      <div className="page-header gap-4 rounded-[1.75rem] bg-[#173b32] px-5 py-6 text-white shadow-xl shadow-[#173b32]/10 sm:px-8 sm:py-8">
         <div>
-          <h1 className="page-title">Rooms Management</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage hotel rooms and their availability</p>
+          <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#c7d78d]">Property · Inventory</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Rooms</h1>
+          <p className="mt-2 text-sm text-white/70 sm:text-base">Room-by-room status across your hotel portfolio.</p>
         </div>
         {isAdmin && (
           <button
@@ -60,8 +61,12 @@ export default function RoomsManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="card rounded-2xl border border-[#e8e4d8] bg-[#fffdfa] shadow-sm sm:p-6">
+        <div className="mb-4 flex items-center gap-2 text-[#171a17]">
+          <Filter className="h-4 w-4 text-[#db4930]" />
+          <h2 className="text-xs font-black uppercase tracking-[0.16em]">Filter room inventory</h2>
+        </div>
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -75,7 +80,7 @@ export default function RoomsManagementPage() {
           <select
             value={branchFilter}
             onChange={(e) => { setBranchFilter(e.target.value); setPage(1); }}
-            className="input-field sm:w-64"
+            className="input-field w-full sm:w-56"
           >
             <option value="">All Branches</option>
             {branches.map((branch: { id: string; name: string }) => (
@@ -85,7 +90,7 @@ export default function RoomsManagementPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="input-field sm:w-48"
+            className="input-field w-full sm:w-48"
           >
             <option value="">All Statuses</option>
             <option value="AVAILABLE">Available</option>
@@ -98,15 +103,22 @@ export default function RoomsManagementPage() {
       </div>
 
       {/* Table */}
-      <div className="card p-0">
+      <div className="card overflow-hidden rounded-2xl border border-[#e8e4d8] bg-[#fffdfa] p-0 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[#eeeae0] px-5 py-4 sm:px-6">
+          <div>
+            <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[#db4930]">Live inventory</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-[#171a17]">Room directory</h2>
+          </div>
+          <p className="text-xs font-semibold text-[#73766d]">{meta?.total ?? rooms.length} rooms</p>
+        </div>
         {isLoading ? (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>
         ) : (
           <>
-            <div className="table-container rounded-xl">
-              <table className="table">
+            <div className="table-container overflow-x-auto">
+              <table className="table min-w-[900px]">
                 <thead>
                   <tr>
                     <th>Room #</th>
@@ -122,7 +134,7 @@ export default function RoomsManagementPage() {
                 <tbody>
                   {rooms.map((room: any) => (
                     <tr key={room.id}>
-                      <td className="font-semibold">{room.roomNumber}</td>
+                      <td className="font-mono text-sm font-bold tracking-wide text-[#315b43]">{room.roomNumber}</td>
                       <td>{room.branch?.name}</td>
                       <td>{room.roomType?.name}</td>
                       <td>Floor {room.floor}</td>
@@ -167,22 +179,22 @@ export default function RoomsManagementPage() {
 
             {/* Pagination */}
             {meta && meta.totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
+              <div className="flex flex-col gap-3 border-t border-[#eeeae0] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <p className="text-sm text-[#73766d]">
                   Showing {(page - 1) * 10 + 1}–{Math.min(page * 10, meta.total)} of {meta.total}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPage(p => p - 1)}
                     disabled={page === 1}
-                    className="btn-secondary text-sm py-1.5 px-3 disabled:opacity-50"
+                    className="btn-secondary py-1.5 px-3 text-sm disabled:opacity-50"
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={page >= meta.totalPages}
-                    className="btn-secondary text-sm py-1.5 px-3 disabled:opacity-50"
+                    className="btn-secondary py-1.5 px-3 text-sm disabled:opacity-50"
                   >
                     Next
                   </button>
@@ -229,7 +241,7 @@ function RoomModal({ isOpen, onClose, room, roomTypes, branches, onSubmit, isLoa
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={room ? 'Edit Room' : 'Add New Room'}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Room Number</label>
             <input

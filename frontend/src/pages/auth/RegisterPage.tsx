@@ -2,187 +2,157 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link } from 'react-router-dom';
-import { Hotel, Eye, EyeOff, Coffee, MapPin } from 'lucide-react';
+import { Hotel, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useRegister } from '../../hooks/useAuth';
 
-const registerSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(
-      /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/,
-      'Password must contain uppercase, lowercase, and number/special character',
-    ),
+const schema = z.object({
+  firstName: z.string().min(2, 'At least 2 characters'),
+  lastName:  z.string().min(2, 'At least 2 characters'),
+  email:     z.string().email('Invalid email'),
+  phone:     z.string().optional(),
+  password:  z.string().min(8, 'At least 8 characters')
+    .regex(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, 'Include uppercase, lowercase & number'),
   confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+}).refine((d) => d.password === d.confirmPassword, { message: "Passwords don't match", path: ['confirmPassword'] });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type Form = z.infer<typeof schema>;
 
 export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const register = useRegister();
-
-  const {
-    register: formRegister,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-  });
-
-  const onSubmit = ({ confirmPassword, ...data }: RegisterForm) => {
-    register.mutate(data);
-  };
+  const [show, setShow] = useState(false);
+  const mut = useRegister();
+  const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
+  const onSubmit = ({ confirmPassword, ...d }: Form) => mut.mutate(d);
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f0eadb] px-4 py-10 sm:px-6">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-[#e1dac8] bg-white shadow-xl lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative hidden overflow-hidden bg-[#18392e] p-10 text-white lg:flex lg:flex-col lg:justify-between">
-          <div aria-hidden="true" className="absolute -right-32 -top-24 h-96 w-96 rounded-full border border-[#e9bd68]/30" />
-          <div aria-hidden="true" className="absolute -right-16 top-0 h-64 w-64 rounded-full border border-[#e9bd68]/20" />
-          <div className="relative">
-            <div className="mb-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9bd68] text-[#18392e]">
-              <Hotel className="h-6 w-6" />
+    <div className="flex min-h-[calc(100vh-68px)] bg-[#faf9f7]">
+
+      {/* Left photo panel */}
+      <div className="relative hidden overflow-hidden bg-stone-900 lg:flex lg:w-[48%]">
+        <img
+          src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1200&q=80"
+          alt=""
+          aria-hidden
+          className="absolute inset-0 h-full w-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-900/50 to-stone-900/20" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c9a96e]/40 to-transparent" />
+
+        <div className="relative flex flex-col justify-between p-12 xl:p-16">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8501e] shadow-brand">
+              <Hotel className="h-[18px] w-[18px] text-white" />
             </div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#e9bd68]">Your next Woliso stay</p>
-            <h2 className="font-serif text-4xl leading-tight">Make room<br /><span className="italic text-[#f2dca7]">for a new journey.</span></h2>
+            <div>
+              <span className="font-display block text-xl font-semibold text-white">Woliso</span>
+              <span className="font-ui block text-[8.5px] uppercase tracking-[0.22em] text-white/30 mt-0.5">Hotel · Ethiopia</span>
+            </div>
+          </Link>
+
+          <div>
+            <h2 className="font-display text-5xl font-semibold leading-[0.92] text-white xl:text-6xl">
+              Make room<br />
+              <em className="not-italic text-[#c9a96e]">for a new journey.</em>
+            </h2>
+            <p className="font-sans mt-5 text-base leading-7 text-white/50">
+              Join Woliso Hotel and keep all your reservations in one place with total clarity.
+            </p>
           </div>
-          <div className="relative">
-            <Coffee className="mb-3 h-6 w-6 text-[#e9bd68]" />
-            <p className="max-w-xs font-serif text-xl italic text-white/90">A place to rest. A place to connect.</p>
-            <p className="mt-6 inline-flex items-center gap-2 text-xs text-white/55"><MapPin className="h-3.5 w-3.5" /> Woliso, Oromia · Ethiopia</p>
+
+          <div className="space-y-3">
+            {[
+              'Browse and book rooms instantly',
+              'Transparent ETB pricing — no surprises',
+              'Manage all your stays in one account',
+            ].map((text) => (
+              <div key={text} className="flex items-center gap-3 text-sm text-white/45">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#c9a96e]" />
+                <span className="font-sans">{text}</span>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="p-7 sm:p-10 lg:p-12">
-          <div className="mb-7 text-center lg:text-left">
-            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#18392e] text-[#e9bd68] lg:hidden">
-              <Hotel className="h-6 w-6" />
+      </div>
+
+      {/* Right form */}
+      <div className="flex flex-1 flex-col justify-center overflow-y-auto px-6 py-10 sm:px-10 lg:px-14 xl:px-20">
+        <div className="mx-auto w-full max-w-sm">
+
+          <div className="mb-7 flex items-center gap-3 lg:hidden">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e8501e]">
+              <Hotel className="h-[17px] w-[17px] text-white" />
             </div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#a45132]">Join us</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-[#18392e]">Create your account</h1>
-            <p className="mt-2 text-sm text-gray-500">Book your stay and keep your reservations together.</p>
+            <span className="font-display text-xl font-semibold text-stone-900">Woliso Hotel</span>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <p className="font-ui mb-1.5 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.25em] text-[#e8501e]">
+            <span className="h-px w-6 bg-[#e8501e]" /> Join us
+          </p>
+          <h1 className="font-display text-4xl font-semibold text-stone-900 sm:text-5xl">Create account</h1>
+          <p className="font-sans mt-2 text-sm text-stone-500">Book your stay and manage reservations in one place.</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  First Name
-                </label>
-                <input
-                  {...formRegister('firstName')}
-                  type="text"
-                  placeholder="John"
-                  className="input-field"
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
-                )}
+                <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">First name</label>
+                <input {...register('firstName')} type="text" placeholder="Abebe" className="input-field" />
+                {errors.firstName && <p className="mt-1 font-ui text-xs text-red-600">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Last Name
-                </label>
-                <input
-                  {...formRegister('lastName')}
-                  type="text"
-                  placeholder="Doe"
-                  className="input-field"
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-xs text-red-600">{errors.lastName.message}</p>
-                )}
+                <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Last name</label>
+                <input {...register('lastName')} type="text" placeholder="Tekle" className="input-field" />
+                {errors.lastName && <p className="mt-1 font-ui text-xs text-red-600">{errors.lastName.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email Address
-              </label>
-              <input
-                {...formRegister('email')}
-                type="email"
-                placeholder="you@example.com"
-                className="input-field"
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-              )}
+              <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Email</label>
+              <input {...register('email')} type="email" placeholder="you@example.com" className="input-field" />
+              {errors.email && <p className="mt-1 font-ui text-xs text-red-600">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Phone (optional)
+              <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">
+                Phone <span className="font-normal normal-case text-stone-400">(optional)</span>
               </label>
-              <input
-                {...formRegister('phone')}
-                type="tel"
-                placeholder="+251 9XX XXX XXX"
-                className="input-field"
-              />
+              <input {...register('phone')} type="tel" placeholder="+251 9XX XXX XXX" className="input-field" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Password
-              </label>
+              <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Password</label>
               <div className="relative">
-                <input
-                  {...formRegister('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  className="input-field pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <input {...register('password')} type={show ? 'text' : 'password'} placeholder="••••••••" className="input-field pr-11" />
+                <button type="button" onClick={() => setShow(!show)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-stone-400 hover:text-stone-700 transition-colors">
+                  {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="mt-1 font-ui text-xs text-red-600">{errors.password.message}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Confirm Password
-              </label>
-              <input
-                {...formRegister('confirmPassword')}
-                type="password"
-                placeholder="••••••••"
-                className="input-field"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">{errors.confirmPassword.message}</p>
-              )}
+              <label className="font-ui mb-1.5 block text-xs font-bold uppercase tracking-[0.16em] text-stone-500">Confirm password</label>
+              <input {...register('confirmPassword')} type="password" placeholder="••••••••" className="input-field" />
+              {errors.confirmPassword && <p className="mt-1 font-ui text-xs text-red-600">{errors.confirmPassword.message}</p>}
             </div>
 
-            <button
-              type="submit"
-              disabled={register.isPending}
-              className="btn-primary w-full py-2.5 text-base mt-2"
-            >
-              {register.isPending ? 'Creating account...' : 'Create Account'}
+            <button type="submit" disabled={mut.isPending}
+              className="btn-primary font-ui mt-1 w-full rounded-xl py-3.5 text-[15px] disabled:opacity-50">
+              {mut.isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Creating account…
+                </span>
+              ) : 'Create Account'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="font-ui mt-6 text-center text-sm text-stone-500">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-[#a45132] hover:underline">
-              Sign in
-            </Link>
+            <Link to="/login" className="font-bold text-[#e8501e] hover:underline">Sign in</Link>
           </p>
         </div>
       </div>

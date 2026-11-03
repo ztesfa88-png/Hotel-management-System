@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
-import { disconnectSocket } from '../lib/socket';
 
 interface LoginData {
   email: string;
@@ -25,8 +24,8 @@ export function useLogin(redirectTo?: string) {
   return useMutation({
     mutationFn: (data: LoginData) => api.post('/auth/login', data),
     onSuccess: (response) => {
-      const { user, accessToken, refreshToken } = response.data.data;
-      setAuth(user, accessToken, refreshToken);
+      const { user } = response.data.data;
+      setAuth(user);
       toast.success(`Welcome back, ${user.firstName}!`);
 
       const fallback = user.role === 'GUEST' ? '/bookings' : '/dashboard';
@@ -45,8 +44,8 @@ export function useRegister() {
   return useMutation({
     mutationFn: (data: RegisterData) => api.post('/auth/register', data),
     onSuccess: (response) => {
-      const { user, accessToken, refreshToken } = response.data.data;
-      setAuth(user, accessToken, refreshToken);
+      const { user } = response.data.data;
+      setAuth(user);
       toast.success('Account created successfully!');
       navigate('/bookings');
     },
@@ -61,7 +60,6 @@ export function useLogout() {
     mutationFn: () => api.post('/auth/logout'),
     onSettled: () => {
       logout();
-      disconnectSocket();
       navigate('/login');
       toast.success('Logged out successfully');
     },
@@ -69,12 +67,15 @@ export function useLogout() {
 }
 
 export function useCurrentUser() {
-  const { accessToken } = useAuthStore();
+  const { user, setAuth } = useAuthStore();
 
   return useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => api.get('/auth/me').then((r) => r.data.data),
-    enabled: !!accessToken,
+    queryFn: () => api.get('/auth/me').then((r) => {
+      setAuth(r.data.data);
+      return r.data.data;
+    }),
+    enabled: !!user,
     staleTime: 10 * 60 * 1000,
   });
 }

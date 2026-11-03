@@ -22,13 +22,14 @@ export default function RoomTypesPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-7 animate-fade-in">
+      <div className="page-header gap-4 rounded-[1.75rem] bg-[#173b32] px-5 py-6 text-white shadow-xl shadow-[#173b32]/10 sm:px-8 sm:py-8">
         <div>
-          <h1 className="page-title">Room Types</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage room categories and pricing</p>
+          <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#c7d78d]">Product · Room collection</p>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Room types</h1>
+          <p className="mt-2 text-sm text-white/70 sm:text-base">Shape the stay with clear categories, thoughtful amenities and pricing.</p>
         </div>
-        <button onClick={() => setShowCreateModal(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 self-start rounded-xl bg-[#d2df9e] px-4 py-3 text-sm font-bold text-[#173b32] shadow-lg transition hover:bg-white sm:self-auto">
           <Plus className="w-4 h-4" />
           Add Room Type
         </button>
@@ -37,21 +38,23 @@ export default function RoomTypesPage() {
       {isLoading ? (
         <div className="flex justify-center py-16"><LoadingSpinner /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {(roomTypes || []).map((rt: any) => (
-            <div key={rt.id} className="card hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
+            <div key={rt.id} className="relative overflow-hidden rounded-2xl border border-[#e8e4d8] bg-[#fffdfa] shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
+              <div className="h-1.5 bg-gradient-to-r from-[#315b43] via-[#c49a46] to-[#db4930]" />
+              <div className="p-5 sm:p-6">
+              <div className="mb-5 flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-primary-50 rounded-lg flex items-center justify-center">
-                    <Tag className="w-5 h-5 text-primary-600" />
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#e7eddf]">
+                    <Tag className="h-5 w-5 text-[#315b43]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{rt.name}</h3>
-                    <p className="text-xs text-gray-500">{rt._count?.rooms || 0} rooms</p>
+                    <h3 className="text-lg font-black tracking-tight text-[#171a17]">{rt.name}</h3>
+                    <p className="mt-0.5 text-xs font-semibold uppercase tracking-wide text-[#73766d]">{rt._count?.rooms || 0} rooms</p>
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => setEditingType(rt)} className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
+                  <button onClick={() => setEditingType(rt)} className="rounded-lg p-1.5 text-gray-400 hover:bg-[#f3efe9] hover:text-[#315b43]">
                     <Edit className="w-4 h-4" />
                   </button>
                   <button onClick={() => handleDelete(rt.id, rt.name)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
@@ -61,28 +64,30 @@ export default function RoomTypesPage() {
               </div>
 
               {rt.description && (
-                <p className="text-sm text-gray-500 mb-3">{rt.description}</p>
+                <p className="mb-5 text-sm leading-relaxed text-gray-500">{rt.description}</p>
               )}
 
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-2xl font-bold text-primary-600">{formatCurrency(Number(rt.basePrice))}</span>
-                <span className="text-sm text-gray-500">per night</span>
+              <div className="mb-4 flex items-end justify-between border-t border-[#eeeae0] pt-4">
+                <span className="text-2xl font-black tracking-tight text-[#315b43]">{formatCurrency(Number(rt.basePrice))}</span>
+                <span className="pb-1 text-xs font-bold uppercase tracking-wide text-gray-500">per night</span>
               </div>
 
-              <div className="text-sm text-gray-500 mb-3">
-                Max {rt.maxGuests} guests
+              <div className="mb-4 flex items-center justify-between rounded-xl bg-[#f5f4ed] px-3 py-2.5 text-sm">
+                <span className="text-gray-500">Guest capacity</span>
+                <span className="font-bold text-[#171a17]">Up to {rt.maxGuests}</span>
               </div>
 
               {rt.amenities && rt.amenities.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {rt.amenities.slice(0, 4).map((a: string) => (
-                    <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{a}</span>
+                    <span key={a} className="rounded-full bg-[#f1efe7] px-2 py-0.5 text-xs text-[#666b60]">{a}</span>
                   ))}
                   {rt.amenities.length > 4 && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">+{rt.amenities.length - 4}</span>
+                    <span className="rounded-full bg-[#f1efe7] px-2 py-0.5 text-xs text-[#666b60]">+{rt.amenities.length - 4}</span>
                   )}
                 </div>
               )}
+              </div>
             </div>
           ))}
         </div>
@@ -141,7 +146,7 @@ function RoomTypeModal({ isOpen, onClose, roomType, onSubmit, isLoading }: any) 
           <textarea {...register('description')} rows={2} className="input-field resize-none" placeholder="Room description..." />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Base Price (ETB/night)</label>
             <input {...register('basePrice', { required: 'Required', min: { value: 899.99, message: 'Minimum price is ETB 899.99' }, max: { value: 4999.99, message: 'Maximum price is ETB 4,999.99' } })} type="number" step="0.01" min="899.99" max="4999.99" className="input-field" placeholder="899.99" />
